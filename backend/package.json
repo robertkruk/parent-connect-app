@@ -8,14 +8,16 @@
     "build": "bun build src/index.ts --outdir ./dist --target bun"
   },
   "dependencies": {
-    "elysia": "latest",
-    "ws": "^8.16.0",
     "bcryptjs": "^2.4.3",
-    "uuid": "^10.0.0",
+    "elysia": "latest",
     "jsonwebtoken": "^9.0.2",
+    "uuid": "^10.0.0",
+    "ws": "^8.16.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "bun-types": "latest"
   }
 }

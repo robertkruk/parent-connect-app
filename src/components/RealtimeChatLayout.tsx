@@ -98,10 +98,16 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
         try {
           const allUsers = await apiService.getAllUsers();
           const userNames: {[key: string]: string} = {};
+          const userAvatars: {[key: string]: string} = {};
           allUsers.forEach((user: any) => {
             userNames[user.id] = user.name;
+            if (user.avatar) {
+              userAvatars[user.id] = user.avatar;
+            }
           });
           setUsers(userNames);
+          // Store avatars in a ref or state for use in message rendering
+          (window as any).userAvatars = userAvatars;
         } catch (error) {
           console.error('Failed to fetch users, using fallback mapping:', error);
           // Fallback to hardcoded mapping if API fails
@@ -336,12 +342,6 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
         <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
           {currentChatMessages.map((msg) => {
             const isOwnMessage = msg.senderId === currentUser.id;
-            const avatarMap: {[key: string]: string} = {
-              '40e8b510-17bc-418e-894a-0d363f8758e7': 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-              'a9836588-2316-4360-a670-ca306b5f3d57': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-              '5daf3326-c042-4ad9-a53b-3baaed0533e5': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-              '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-            };
             
             return (
               <div key={msg.id} className="mb-4">
@@ -350,7 +350,7 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
                     {!isOwnMessage && (
                       <div className="flex items-center space-x-2 mb-1">
                         <Avatar 
-                          src={avatarMap[msg.senderId]}
+                          src={(window as any).userAvatars?.[msg.senderId] || undefined}
                           alt={users[msg.senderId] || `User ${msg.senderId}`}
                           size="sm"
                           className="bg-gray-200"

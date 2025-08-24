@@ -1,6 +1,7 @@
 import { Database } from 'bun:sqlite';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import type { User, Child, Class, Chat, Message } from '../types/index.js';
 
 class DatabaseService {
   private db: Database;
@@ -53,6 +54,11 @@ class DatabaseService {
   getUserByEmail(email: string) {
     const stmt = this.db.prepare('SELECT * FROM users WHERE email = ?');
     return stmt.get(email) as User | undefined;
+  }
+
+  getAllUsers() {
+    const stmt = this.db.prepare('SELECT * FROM users');
+    return stmt.all() as User[];
   }
 
   updateUser(id: string, updates: Partial<User>) {
