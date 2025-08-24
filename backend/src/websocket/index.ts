@@ -228,6 +228,19 @@ class WebSocketManager {
         data: { status: 'authenticated', user: { id: user.id, name: user.name } }
       });
 
+      // Send current online users to the newly authenticated user
+      const onlineUsers = db.getOnlineUsers();
+      for (const onlineUser of onlineUsers) {
+        if (onlineUser.user_id !== user.id) {
+          this.sendMessage(connectionId, {
+            id: uuidv4(),
+            type: 'presence',
+            timestamp: Date.now(),
+            data: { userId: onlineUser.user_id, status: 'online' }
+          });
+        }
+      }
+
     } catch (error) {
       console.error('❌ Authentication error:', error);
       this.sendError(connectionId, 'Authentication failed');
@@ -392,8 +405,13 @@ class WebSocketManager {
 
   private async updateUserPresence(userId: string, status: 'online' | 'away' | 'offline') {
     try {
-      // Update in database (you'll need to add this to your database schema)
-      // For now, we'll just log it
+      // Update user presence in database
+      const now = new Date().toISOString();
+      const stmt = db.db.prepare(`
+        INSERT OR REPLACE INTO user_presence (user_id, status, last_seen)
+        VALUES (?, ?, ?)
+      `);
+      stmt.run(userId, status, now);
       console.log(`👤 User ${userId} presence updated to: ${status}`);
     } catch (error) {
       console.error('❌ Error updating user presence:', error);
@@ -402,8 +420,13 @@ class WebSocketManager {
 
   private async updateMessageStatus(messageId: string, status: MessageStatus) {
     try {
-      // Update in database (you'll need to add this to your database schema)
-      // For now, we'll just log it
+      // Update message status in database
+      const now = new Date().toISOString();
+      const stmt = db.db.prepare(`
+        INSERT OR REPLACE INTO message_status (message_id, status, updated_at)
+        VALUES (?, ?, ?)
+      `);
+      stmt.run(messageId, status, now);
       console.log(`📊 Message ${messageId} status updated to: ${status}`);
     } catch (error) {
       console.error('❌ Error updating message status:', error);

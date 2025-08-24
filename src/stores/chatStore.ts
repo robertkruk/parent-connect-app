@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { websocketService, type ChatMessage, MessageStatus } from '../services/websocket';
+import { apiService } from '../services/api';
 
 export interface Message {
   id: string;
@@ -212,6 +213,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       // Connect to WebSocket
       await websocketService.connect(token);
+      
+      // Fetch current online users after WebSocket connection is established
+      try {
+        const onlineUsersResponse = await apiService.getOnlineUsers();
+        const onlineUserIds = onlineUsersResponse.map((user: { userId: string }) => user.userId);
+        console.log('👥 Fetched online users:', onlineUserIds);
+        
+        // Update the online users set
+        set(state => {
+          const newOnlineUsers = new Set<string>(onlineUserIds);
+          return { onlineUsers: newOnlineUsers };
+        });
+      } catch (error) {
+        console.error('Failed to fetch online users:', error);
+      }
       
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
