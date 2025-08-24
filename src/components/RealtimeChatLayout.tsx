@@ -200,8 +200,12 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
     }
   };
 
-  const handleMessageRead = (messageId: string) => {
-    markMessageAsRead(messageId);
+  const handleMessageRead = async (messageId: string) => {
+    try {
+      await markMessageAsRead(messageId);
+    } catch (error) {
+      console.error('Failed to mark message as read:', error);
+    }
   };
 
   const getMessageStatusIcon = (status?: MessageStatus) => {

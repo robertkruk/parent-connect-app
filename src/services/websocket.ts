@@ -267,7 +267,9 @@ class ParentConnectWebSocket {
   }
 
   public markMessageAsRead(messageId: string): void {
-    if (!this.isAuthenticated) return;
+    if (!this.isAuthenticated) {
+      return;
+    }
 
     const message: MessageReceipt = {
       id: uuidv4(),
@@ -399,7 +401,6 @@ class ParentConnectWebSocket {
   }
 
   private handleReceiptMessage(message: MessageReceipt): void {
-    console.log('📋 Receipt received:', message.data);
     const status = message.data.receiptType === 'read' ? MessageStatus.READ : MessageStatus.DELIVERED;
     if (this.onStatusUpdate) {
       this.onStatusUpdate(message.data.messageId, status);

@@ -309,12 +309,14 @@ class WebSocketManager {
 
   private async handleMessageReceipt(connectionId: string, message: MessageReceipt) {
     const connection = this.connections.get(connectionId);
-    if (!connection || !connection.isAuthenticated) return;
+    if (!connection || !connection.isAuthenticated) {
+      return;
+    }
 
     try {
       // Update message status in database
-      await this.updateMessageStatus(message.data.messageId, 
-        message.data.receiptType === 'read' ? MessageStatus.READ : MessageStatus.DELIVERED);
+      const status = message.data.receiptType === 'read' ? MessageStatus.READ : MessageStatus.DELIVERED;
+      await this.updateMessageStatus(message.data.messageId, status);
 
       // Broadcast receipt to message sender
       const originalMessage = db.getMessageById(message.data.messageId);
@@ -328,7 +330,7 @@ class WebSocketManager {
       }
 
     } catch (error) {
-      console.error('❌ Error handling message receipt:', error);
+      console.error('Error handling message receipt:', error);
     }
   }
 
@@ -406,30 +408,18 @@ class WebSocketManager {
   private async updateUserPresence(userId: string, status: 'online' | 'away' | 'offline') {
     try {
       // Update user presence in database
-      const now = new Date().toISOString();
-      const stmt = db.db.prepare(`
-        INSERT OR REPLACE INTO user_presence (user_id, status, last_seen)
-        VALUES (?, ?, ?)
-      `);
-      stmt.run(userId, status, now);
-      console.log(`👤 User ${userId} presence updated to: ${status}`);
+      db.updateUserPresence(userId, status);
     } catch (error) {
-      console.error('❌ Error updating user presence:', error);
+      console.error('Error updating user presence:', error);
     }
   }
 
   private async updateMessageStatus(messageId: string, status: MessageStatus) {
     try {
       // Update message status in database
-      const now = new Date().toISOString();
-      const stmt = db.db.prepare(`
-        INSERT OR REPLACE INTO message_status (message_id, status, updated_at)
-        VALUES (?, ?, ?)
-      `);
-      stmt.run(messageId, status, now);
-      console.log(`📊 Message ${messageId} status updated to: ${status}`);
+      db.updateMessageStatus(messageId, status);
     } catch (error) {
-      console.error('❌ Error updating message status:', error);
+      console.error('Error updating message status:', error);
     }
   }
 

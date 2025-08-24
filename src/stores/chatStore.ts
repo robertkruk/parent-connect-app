@@ -49,7 +49,7 @@ interface ChatState {
   setChats: (chats: Chat[]) => void;
   setSelectedChat: (chat: Chat | null) => void;
   clearChatMessages: (chatId: string) => void;
-  markMessageAsRead: (messageId: string) => void;
+  markMessageAsRead: (messageId: string) => Promise<void>;
   
   // WebSocket integration
   initializeWebSocket: (token: string) => Promise<void>;
@@ -99,7 +99,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const newMessageStatus = new Map(state.messageStatus);
       newMessageStatus.set(messageId, status);
       
-      return { messageStatus: newMessageStatus };
+      // Also update the message objects in the messages Map
+      const newMessages = new Map(state.messages);
+      for (const [chatId, messages] of newMessages) {
+        const updatedMessages = messages.map(msg => 
+          msg.id === messageId ? { ...msg, status } : msg
+        );
+        newMessages.set(chatId, updatedMessages);
+      }
+      
+      return { 
+        messageStatus: newMessageStatus,
+        messages: newMessages
+      };
     });
   },
 
@@ -161,12 +173,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
-  markMessageAsRead: (messageId: string) => {
-    // Update local status
-    get().updateMessageStatus(messageId, MessageStatus.READ);
-    
-    // Send read receipt via WebSocket
-    websocketService.markMessageAsRead(messageId);
+  markMessageAsRead: async (messageId: string) => {
+    try {
+      // Update local status immediately for optimistic UI update
+      get().updateMessageStatus(messageId, MessageStatus.READ);
+      
+      // Send read receipt via WebSocket
+      websocketService.markMessageAsRead(messageId);
+      
+      // Also persist to database via REST API
+      const selectedChat = get().selectedChat;
+      if (selectedChat) {
+        await apiService.markMessageAsRead(selectedChat.id, messageId);
+      }
+    } catch (error) {
+      console.error('Failed to mark message as read:', error);
+      // Revert local status on error
+      get().updateMessageStatus(messageId, MessageStatus.DELIVERED);
+    }
   },
 
   // WebSocket integration
