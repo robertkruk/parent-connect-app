@@ -165,26 +165,49 @@ start_frontend() {
         fi
     fi
     
-    # Start frontend in background
-    npm run dev > "$LOG_FILE" 2>&1 &
+    # Start frontend in background with separate log file
+    npm run dev > "frontend.log" 2>&1 &
     local frontend_pid=$!
     echo $frontend_pid > "$FRONTEND_PID_FILE"
     
-    # Wait a moment to check if it started successfully
-    sleep 3
-    if is_process_running "$FRONTEND_PID_FILE"; then
-        # Verify the port is actually being used by our process
-        if is_port_in_use $FRONTEND_PORT; then
-            print_success "Frontend started successfully (PID: $frontend_pid)"
-            print_status "Frontend available at: http://localhost:$FRONTEND_PORT"
-        else
-            print_error "Frontend process started but port $FRONTEND_PORT is not responding"
-            kill $frontend_pid 2>/dev/null
+    # Wait longer for Vite to start up and check multiple times
+    print_status "Waiting for frontend to start..."
+    local max_attempts=10
+    local attempt=0
+    local frontend_ready=false
+    
+    while [ $attempt -lt $max_attempts ]; do
+        sleep 2
+        attempt=$((attempt + 1))
+        
+        # Check if process is still running
+        if ! is_process_running "$FRONTEND_PID_FILE"; then
+            print_error "Frontend process died during startup"
             rm -f "$FRONTEND_PID_FILE"
             return 1
         fi
+        
+        # Check if port is in use
+        if is_port_in_use $FRONTEND_PORT; then
+            # Additional check: try to connect to the dev server
+            if curl -s "http://localhost:$FRONTEND_PORT" > /dev/null 2>&1; then
+                frontend_ready=true
+                break
+            fi
+        fi
+        
+        print_status "Waiting for frontend... (attempt $attempt/$max_attempts)"
+    done
+    
+    if $frontend_ready; then
+        print_success "Frontend started successfully (PID: $frontend_pid)"
+        print_status "Frontend available at: http://localhost:$FRONTEND_PORT"
+        return 0
     else
-        print_error "Failed to start frontend"
+        print_error "Frontend process started but port $FRONTEND_PORT is not responding"
+        print_status "Check frontend.log for details"
+        kill $frontend_pid 2>/dev/null
+        rm -f "$FRONTEND_PID_FILE"
         return 1
     fi
 }
@@ -223,26 +246,49 @@ start_backend() {
         fi
     fi
     
-    # Start backend in background
-    bun run dev > "../$LOG_FILE" 2>&1 &
+    # Start backend in background with separate log file
+    bun run dev > "../backend.log" 2>&1 &
     local backend_pid=$!
     echo $backend_pid > "../$BACKEND_PID_FILE"
     
-    # Wait a moment to check if it started successfully
-    sleep 4
-    if is_process_running "../$BACKEND_PID_FILE"; then
-        # Verify the port is actually being used by our process
-        if is_port_in_use $BACKEND_PORT; then
-            print_success "Backend started successfully (PID: $backend_pid)"
-            print_status "Backend available at: http://localhost:$BACKEND_PORT"
-        else
-            print_error "Backend process started but port $BACKEND_PORT is not responding"
-            kill $backend_pid 2>/dev/null
+    # Wait longer for backend to start up and check multiple times
+    print_status "Waiting for backend to start..."
+    local max_attempts=8
+    local attempt=0
+    local backend_ready=false
+    
+    while [ $attempt -lt $max_attempts ]; do
+        sleep 2
+        attempt=$((attempt + 1))
+        
+        # Check if process is still running
+        if ! is_process_running "../$BACKEND_PID_FILE"; then
+            print_error "Backend process died during startup"
             rm -f "../$BACKEND_PID_FILE"
             return 1
         fi
+        
+        # Check if port is in use
+        if is_port_in_use $BACKEND_PORT; then
+            # Additional check: try to connect to the API
+            if curl -s "http://localhost:$BACKEND_PORT" > /dev/null 2>&1; then
+                backend_ready=true
+                break
+            fi
+        fi
+        
+        print_status "Waiting for backend... (attempt $attempt/$max_attempts)"
+    done
+    
+    if $backend_ready; then
+        print_success "Backend started successfully (PID: $backend_pid)"
+        print_status "Backend available at: http://localhost:$BACKEND_PORT"
+        return 0
     else
-        print_error "Failed to start backend"
+        print_error "Backend process started but port $BACKEND_PORT is not responding"
+        print_status "Check backend.log for details"
+        kill $backend_pid 2>/dev/null
+        rm -f "../$BACKEND_PID_FILE"
         return 1
     fi
 }
@@ -327,12 +373,20 @@ show_status() {
     
     echo
     echo "Logs:"
-    if [ -f "$LOG_FILE" ]; then
-        print_status "Log file: $LOG_FILE"
-        print_status "Last 10 lines:"
-        tail -n 10 "$LOG_FILE"
+    if [ -f "frontend.log" ]; then
+        print_status "Frontend log: frontend.log"
+        print_status "Last 5 lines:"
+        tail -n 5 "frontend.log"
     else
-        print_warning "No log file found"
+        print_warning "No frontend log file found"
+    fi
+    
+    if [ -f "backend.log" ]; then
+        print_status "Backend log: backend.log"
+        print_status "Last 5 lines:"
+        tail -n 5 "backend.log"
+    else
+        print_warning "No backend log file found"
     fi
 }
 
@@ -360,7 +414,7 @@ start_all() {
             print_status "Application URLs:"
             print_status "Frontend: http://localhost:$FRONTEND_PORT"
             print_status "Backend:  http://localhost:$BACKEND_PORT"
-            print_status "Logs:     $LOG_FILE"
+            print_status "Logs:     frontend.log, backend.log"
         else
             print_error "Failed to start frontend"
             stop_backend
