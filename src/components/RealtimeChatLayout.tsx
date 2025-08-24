@@ -94,14 +94,26 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
           });
         }
         
-        const userNames = {
-          '40e8b510-17bc-418e-894a-0d363f8758e7': 'Sarah Johnson',
-          'a9836588-2316-4360-a670-ca306b5f3d57': 'Michael Chen', 
-          '5daf3326-c042-4ad9-a53b-3baaed0533e5': 'Emily Rodriguez',
-          '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36': 'David Thompson',
-          '162b123d-d09d-4e22-b061-19479110e5f6': 'Lisa Wang'
-        };
-        setUsers(userNames);
+        // Fetch all users to build the user mapping
+        try {
+          const allUsers = await apiService.getAllUsers();
+          const userNames: {[key: string]: string} = {};
+          allUsers.forEach((user: any) => {
+            userNames[user.id] = user.name;
+          });
+          setUsers(userNames);
+        } catch (error) {
+          console.error('Failed to fetch users, using fallback mapping:', error);
+          // Fallback to hardcoded mapping if API fails
+          const userNames = {
+            '40e8b510-17bc-418e-894a-0d363f8758e7': 'Sarah Johnson',
+            'a9836588-2316-4360-a670-ca306b5f3d57': 'Michael Chen', 
+            '5daf3326-c042-4ad9-a53b-3baaed0533e5': 'Emily Rodriguez',
+            '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36': 'David Thompson',
+            '162b123d-d09d-4e22-b061-19479110e5f6': 'Lisa Wang'
+          };
+          setUsers(userNames);
+        }
       } catch (error) {
         console.error('Error loading chat data:', error);
         setError('Failed to load chat data');

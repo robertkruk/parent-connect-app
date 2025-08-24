@@ -140,6 +140,22 @@ const app = new Elysia()
         password: undefined // Don't send password
       };
     })
+    .get('/', async ({ getCurrentUser }) => {
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error('Unauthorized');
+      }
+      
+      const allUsers = db.getAllUsers();
+      return allUsers.map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone,
+        isVerified: u.isVerified,
+        password: undefined // Don't send password
+      }));
+    })
     .get('/presence', async ({ getCurrentUser }) => {
       const user = await getCurrentUser();
       if (!user) {

@@ -188,6 +188,10 @@ class ApiService {
     return this.request<User>('/users/me');
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return this.request<User[]>('/users');
+  }
+
   // User presence
   async getUserPresence(): Promise<UserPresence | undefined> {
     return this.request<UserPresence | undefined>('/users/presence');
