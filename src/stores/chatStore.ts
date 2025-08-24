@@ -82,7 +82,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
       
       console.log('✅ Adding new message:', message.id, 'to chat:', chatId);
-      const updatedMessages = [...currentMessages, message];
+      const updatedMessages = [...currentMessages, message]
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       
       const newMessages = new Map(state.messages);
       newMessages.set(chatId, updatedMessages);

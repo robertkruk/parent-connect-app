@@ -233,7 +233,10 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
     );
   }
 
-  const currentChatMessages = selectedChat ? messages.get(selectedChat.id) || [] : [];
+  const currentChatMessages = selectedChat ? 
+    (messages.get(selectedChat.id) || []).sort((a, b) => 
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    ) : [];
   const currentTypingUsers = selectedChat ? typingUsers.get(selectedChat.id) || new Set() : new Set();
 
   return (

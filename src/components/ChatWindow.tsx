@@ -21,7 +21,9 @@ export default function ChatWindow({ currentUser, onMenuClick }: ChatWindowProps
   const { onlineUsers } = useChatStore();
 
   const chat = mockChats.find(c => c.id === chatId);
-  const chatMessages = mockMessages.filter(m => m.chatId === chatId);
+  const chatMessages = mockMessages
+    .filter(m => m.chatId === chatId)
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
