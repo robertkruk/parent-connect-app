@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { websocketService, type ChatMessage, type MessageStatus } from '../services/websocket';
+import { websocketService, type ChatMessage, MessageStatus } from '../services/websocket';
 
 export interface Message {
   id: string;
@@ -72,6 +72,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
   addMessage: (chatId: string, message: Message) => {
     set((state) => {
       const currentMessages = state.messages.get(chatId) || [];
+      
+      // Check if message already exists to prevent duplicates
+      const messageExists = currentMessages.some(existingMsg => existingMsg.id === message.id);
+      if (messageExists) {
+        console.log('🚫 Duplicate message prevented:', message.id);
+        return state; // Return unchanged state if message already exists
+      }
+      
+      console.log('✅ Adding new message:', message.id, 'to chat:', chatId);
       const updatedMessages = [...currentMessages, message];
       
       const newMessages = new Map(state.messages);
@@ -79,7 +88,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       
       return {
         messages: newMessages,
-        messageStatus: new Map(state.messageStatus).set(message.id, message.status || 'sent')
+        messageStatus: new Map(state.messageStatus).set(message.id, message.status || MessageStatus.SENT)
       };
     });
   },
@@ -143,6 +152,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   clearChatMessages: (chatId: string) => {
     set((state) => {
+      const currentMessages = state.messages.get(chatId) || [];
+      console.log('🧹 Clearing messages for chat:', chatId, 'Count:', currentMessages.length);
       const newMessages = new Map(state.messages);
       newMessages.set(chatId, []);
       return { messages: newMessages };
@@ -151,7 +162,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   markMessageAsRead: (messageId: string) => {
     // Update local status
-    get().updateMessageStatus(messageId, 'read');
+    get().updateMessageStatus(messageId, MessageStatus.READ);
     
     // Send read receipt via WebSocket
     websocketService.markMessageAsRead(messageId);
@@ -170,7 +181,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           type: message.data.messageType,
           attachments: message.data.attachments,
           replyTo: message.data.replyTo,
-          status: 'delivered',
+          status: MessageStatus.DELIVERED,
           createdAt: new Date(message.data.timestamp).toISOString(),
           updatedAt: new Date(message.data.timestamp).toISOString()
         };
@@ -228,7 +239,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         type,
         attachments,
         replyTo,
-        status: 'sending',
+        status: MessageStatus.SENDING,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -240,13 +251,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const messageId = await websocketService.sendMessage(chatId, content, type, attachments, replyTo);
       
       // Update message status to sent
-      get().updateMessageStatus(optimisticMessage.id, 'sent');
+      get().updateMessageStatus(optimisticMessage.id, MessageStatus.SENT);
       
       return messageId;
     } catch (error) {
       console.error('Failed to send message:', error);
       // Update message status to failed
-      get().updateMessageStatus(`temp-${Date.now()}`, 'failed');
+      get().updateMessageStatus(`temp-${Date.now()}`, MessageStatus.FAILED);
       throw error;
     }
   },

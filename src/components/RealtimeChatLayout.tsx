@@ -68,6 +68,8 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
         
         if (apiChats.length > 0) {
           setSelectedChat(apiChats[0] as any);
+          // Clear existing messages for the initial chat
+          clearChatMessages(apiChats[0].id);
           const chatMessages = await apiService.getMessages(apiChats[0].id);
           chatMessages.forEach(msg => {
             addMessage(apiChats[0].id, {
@@ -102,7 +104,7 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
     };
 
     loadData();
-  }, [addMessage, setChats, setSelectedChat]);
+  }, [addMessage, setChats, setSelectedChat, clearChatMessages]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -149,6 +151,8 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
 
   const handleChatSelect = async (chat: any) => {
     setSelectedChat(chat);
+    // Clear existing messages for this chat before loading new ones
+    clearChatMessages(chat.id);
     try {
       const chatMessages = await apiService.getMessages(chat.id);
       chatMessages.forEach(msg => {
@@ -160,8 +164,8 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
           type: msg.type,
           attachments: msg.attachments,
           replyTo: msg.replyTo,
-                        status: msg.status as any,
-              createdAt: msg.createdAt,
+          status: msg.status as any,
+          createdAt: msg.createdAt,
           updatedAt: msg.updatedAt
         });
       });
