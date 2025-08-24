@@ -236,8 +236,18 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
         <div className="p-4 bg-blue-600 text-white">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <h2 className="text-xl font-semibold">ParentConnect</h2>
-              <p className="text-sm opacity-90 mt-1">{currentUser.name}</p>
+              <div className="flex items-center space-x-3 mb-2">
+                <Avatar 
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  size="md"
+                  className="bg-white bg-opacity-20"
+                />
+                <div>
+                  <h2 className="text-xl font-semibold">ParentConnect</h2>
+                  <p className="text-sm opacity-90">{currentUser.name}</p>
+                </div>
+              </div>
               <div className="flex items-center mt-2">
                 <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
                 <span className="text-xs">

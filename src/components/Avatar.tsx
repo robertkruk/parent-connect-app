@@ -20,23 +20,26 @@ export default function Avatar({ src, alt, size = 'md', className = '' }: Avatar
   
   if (src) {
     return (
-      <img
-        src={src}
-        alt={alt}
-        className={`${sizeClass} rounded-full object-cover ${className}`}
-        onError={(e) => {
-          // Fallback to initials if image fails to load
-          const target = e.target as HTMLImageElement;
-          target.style.display = 'none';
-          const parent = target.parentElement;
-          if (parent) {
-            const fallback = parent.querySelector('.avatar-fallback') as HTMLElement;
+      <div className={`relative ${sizeClass} ${className}`}>
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full rounded-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            const fallback = target.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
             if (fallback) {
               fallback.style.display = 'flex';
             }
-          }
-        }}
-      />
+          }}
+        />
+        <div 
+          className={`avatar-fallback w-full h-full bg-primary-500 rounded-full flex items-center justify-center text-white font-medium hidden`}
+        >
+          {getInitials(alt)}
+        </div>
+      </div>
     );
   }
 

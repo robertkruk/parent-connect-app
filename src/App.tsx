@@ -13,7 +13,7 @@ const mockUsers = [
     password: 'password123',
     pin: '1234',
     isVerified: true,
-    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+    avatar: 'https://i.pravatar.cc/150?img=1',
     createdAt: new Date('2024-01-15'),
     children: [{
       id: 'emma-johnson',
@@ -31,7 +31,7 @@ const mockUsers = [
     password: 'password123',
     pin: '5678',
     isVerified: true,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    avatar: 'https://i.pravatar.cc/150?img=2',
     createdAt: new Date('2024-01-16'),
     children: [{
       id: 'alex-chen',
@@ -49,7 +49,7 @@ const mockUsers = [
     password: 'password123',
     pin: '9012',
     isVerified: true,
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+    avatar: 'https://i.pravatar.cc/150?img=3',
     createdAt: new Date('2024-01-17'),
     children: [{
       id: 'sophia-rodriguez',
@@ -67,7 +67,7 @@ const mockUsers = [
     password: 'password123',
     pin: '3456',
     isVerified: true,
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+    avatar: 'https://i.pravatar.cc/150?img=4',
     createdAt: new Date('2024-01-18'),
     children: [{
       id: 'james-thompson',
@@ -85,7 +85,7 @@ const mockUsers = [
     password: 'password123',
     pin: '7890',
     isVerified: true,
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
+    avatar: 'https://i.pravatar.cc/150?img=5',
     createdAt: new Date('2024-01-19'),
     children: [{
       id: 'mia-wang',

@@ -13,7 +13,7 @@ async function seedDatabase() {
       email: 'sarah.johnson@email.com',
       password: hashedPassword,
       phone: '+1-555-0123',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+      avatar: 'https://i.pravatar.cc/150?img=1',
       isVerified: true
     });
 
@@ -22,7 +22,7 @@ async function seedDatabase() {
       email: 'michael.chen@email.com',
       password: hashedPassword,
       phone: '+1-555-0124',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+      avatar: 'https://i.pravatar.cc/150?img=2',
       isVerified: true
     });
 
@@ -31,7 +31,7 @@ async function seedDatabase() {
       email: 'emily.rodriguez@email.com',
       password: hashedPassword,
       phone: '+1-555-0125',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+      avatar: 'https://i.pravatar.cc/150?img=3',
       isVerified: true
     });
 
@@ -40,7 +40,7 @@ async function seedDatabase() {
       email: 'david.thompson@email.com',
       password: hashedPassword,
       phone: '+1-555-0126',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+      avatar: 'https://i.pravatar.cc/150?img=4',
       isVerified: true
     });
 
@@ -49,7 +49,7 @@ async function seedDatabase() {
       email: 'lisa.wang@email.com',
       password: hashedPassword,
       phone: '+1-555-0127',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
+      avatar: 'https://i.pravatar.cc/150?img=5',
       isVerified: true
     });
 
@@ -61,7 +61,7 @@ async function seedDatabase() {
       grade: '3rd Grade',
       school: 'Lincoln Elementary',
       parentId: sarah.id,
-      avatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&h=150&fit=crop&crop=face'
+      avatar: 'https://i.pravatar.cc/150?img=6'
     });
 
     const alex = db.createChild({
@@ -69,7 +69,7 @@ async function seedDatabase() {
       grade: '3rd Grade',
       school: 'Lincoln Elementary',
       parentId: michael.id,
-      avatar: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=150&h=150&fit=crop&crop=face'
+      avatar: 'https://i.pravatar.cc/150?img=7'
     });
 
     const sophia = db.createChild({
@@ -77,7 +77,7 @@ async function seedDatabase() {
       grade: '3rd Grade',
       school: 'Lincoln Elementary',
       parentId: emily.id,
-      avatar: 'https://images.unsplash.com/photo-1544717302-de2939b7ef71?w=150&h=150&fit=crop&crop=face'
+      avatar: 'https://i.pravatar.cc/150?img=8'
     });
 
     const james = db.createChild({
@@ -85,7 +85,7 @@ async function seedDatabase() {
       grade: '4th Grade',
       school: 'Lincoln Elementary',
       parentId: david.id,
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
+      avatar: 'https://i.pravatar.cc/150?img=9'
     });
 
     const mia = db.createChild({
@@ -93,7 +93,7 @@ async function seedDatabase() {
       grade: '3rd Grade',
       school: 'Lincoln Elementary',
       parentId: lisa.id,
-      avatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&h=150&fit=crop&crop=face'
+      avatar: 'https://i.pravatar.cc/150?img=10'
     });
 
     console.log('✅ Created demo children');

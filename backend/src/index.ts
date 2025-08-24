@@ -78,6 +78,7 @@ const app = new Elysia()
           name: user.name,
           email: user.email,
           phone: user.phone,
+          avatar: user.avatar,
           isVerified: user.isVerified
         }
       };
@@ -115,6 +116,7 @@ const app = new Elysia()
           name: user.name,
           email: user.email,
           phone: user.phone,
+          avatar: user.avatar,
           isVerified: user.isVerified
         }
       };
@@ -152,6 +154,7 @@ const app = new Elysia()
         name: u.name,
         email: u.email,
         phone: u.phone,
+        avatar: u.avatar,
         isVerified: u.isVerified,
         password: undefined // Don't send password
       }));
