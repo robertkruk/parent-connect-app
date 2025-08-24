@@ -4,6 +4,7 @@ import type { User as UserType, Chat } from '../types';
 import { mockChats, mockUsers, mockChildren } from '../data/mockData';
 import { formatTime, getInitials } from '../lib/utils';
 import { useChatStore } from '../stores/chatStore';
+import Avatar from './Avatar';
 
 interface ChatSidebarProps {
   currentUser: UserType;
@@ -83,9 +84,11 @@ export default function ChatSidebar({ currentUser, onChatSelect, selectedChatId 
       {/* User Info */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white font-medium">
-            {getInitials(currentUser.name)}
-          </div>
+          <Avatar 
+            src={currentUser.avatar} 
+            alt={currentUser.name} 
+            size="lg" 
+          />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">{currentUser.name}</p>
             <div className="flex items-center space-x-1">
@@ -109,11 +112,12 @@ export default function ChatSidebar({ currentUser, onChatSelect, selectedChatId 
             <div className="space-y-1">
               {userChildren.map(child => (
                 <div key={child.id} className="flex items-center space-x-2">
-                  <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-medium text-primary-700">
-                      {getInitials(child.name)}
-                    </span>
-                  </div>
+                  <Avatar 
+                    src={child.avatar} 
+                    alt={child.name} 
+                    size="sm" 
+                    className="bg-primary-100"
+                  />
                   <span className="text-xs text-gray-600">{child.name} - {child.grade}</span>
                 </div>
               ))}

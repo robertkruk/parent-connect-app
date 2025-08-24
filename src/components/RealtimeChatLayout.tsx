@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../stores/chatStore';
 import { apiService } from '../services/api';
 import { MessageStatus } from '../services/websocket';
+import Avatar from './Avatar';
 
 interface RealtimeChatLayoutProps {
   currentUser: any;
@@ -281,9 +282,24 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
       <div className="flex-1 flex flex-col">
         {/* Chat Header */}
         <div className="p-4 bg-white border-b border-gray-200 flex items-center">
-          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-            {getChatDisplayName(selectedChat)?.charAt(0) || 'C'}
-          </div>
+          <Avatar 
+            src={selectedChat?.type === 'direct' ? 
+              (() => {
+                const otherParticipantId = (selectedChat as any).participants?.find((p: string) => p !== currentUser.id);
+                // For demo purposes, map user IDs to mock avatars
+                const avatarMap: {[key: string]: string} = {
+                  '40e8b510-17bc-418e-894a-0d363f8758e7': 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+                  'a9836588-2316-4360-a670-ca306b5f3d57': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+                  '5daf3326-c042-4ad9-a53b-3baaed0533e5': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+                  '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+                };
+                return avatarMap[otherParticipantId] || undefined;
+              })() : undefined
+            }
+            alt={getChatDisplayName(selectedChat) || 'Chat'}
+            size="lg"
+            className="mr-3 bg-blue-600"
+          />
           <div className="flex-1">
             <div className="font-semibold text-gray-900">{selectedChat ? getChatDisplayName(selectedChat) : 'Select a chat'}</div>
             <div className="text-sm text-gray-600 flex items-center">
@@ -306,45 +322,65 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
 
         {/* Messages */}
         <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
-          {currentChatMessages.map((msg) => (
-            <div key={msg.id} className="mb-4">
-              <div className={`max-w-xs lg:max-w-md ${
-                msg.senderId === currentUser.id ? 'ml-auto' : 'mr-auto'
-              }`}>
-                <div className={`p-3 rounded-lg ${
-                  msg.senderId === currentUser.id 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-white text-gray-900 border border-gray-200'
-                }`}>
-                  <div className="text-xs opacity-80 mb-1">
-                    {msg.senderId === currentUser.id ? currentUser.name : (users[msg.senderId] || `User ${msg.senderId}`)}
-                  </div>
-                  <div>{msg.content}</div>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-xs opacity-70">
-                      {new Date(msg.createdAt).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </div>
-                    {msg.senderId === currentUser.id && (
-                      <div className="text-xs text-gray-400">
-                        {getMessageStatusIcon(msg.status)}
+          {currentChatMessages.map((msg) => {
+            const isOwnMessage = msg.senderId === currentUser.id;
+            const avatarMap: {[key: string]: string} = {
+              '40e8b510-17bc-418e-894a-0d363f8758e7': 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+              'a9836588-2316-4360-a670-ca306b5f3d57': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+              '5daf3326-c042-4ad9-a53b-3baaed0533e5': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+              '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+            };
+            
+            return (
+              <div key={msg.id} className="mb-4">
+                <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-xs lg:max-w-md ${isOwnMessage ? 'order-2' : 'order-1'}`}>
+                    {!isOwnMessage && (
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Avatar 
+                          src={avatarMap[msg.senderId]}
+                          alt={users[msg.senderId] || `User ${msg.senderId}`}
+                          size="sm"
+                          className="bg-gray-200"
+                        />
+                        <span className="text-xs font-medium text-gray-700">
+                          {msg.senderId === currentUser.id ? currentUser.name : (users[msg.senderId] || `User ${msg.senderId}`)}
+                        </span>
                       </div>
+                    )}
+                    <div className={`p-3 rounded-lg ${
+                      isOwnMessage 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-white text-gray-900 border border-gray-200'
+                    }`}>
+                      <div>{msg.content}</div>
+                      <div className="flex items-center justify-between mt-2">
+                        <div className={`text-xs ${isOwnMessage ? 'opacity-70' : 'opacity-70'}`}>
+                          {new Date(msg.createdAt).toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </div>
+                        {isOwnMessage && (
+                          <div className="text-xs text-gray-400">
+                            {getMessageStatusIcon(msg.status)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {!isOwnMessage && (
+                      <button
+                        onClick={() => handleMessageRead(msg.id)}
+                        className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                      >
+                        Mark as read
+                      </button>
                     )}
                   </div>
                 </div>
-                {msg.senderId !== currentUser.id && (
-                  <button
-                    onClick={() => handleMessageRead(msg.id)}
-                    className="text-xs text-blue-600 hover:text-blue-800 mt-1"
-                  >
-                    Mark as read
-                  </button>
-                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
           
           {/* Typing indicators */}
           {currentTypingUsers.size > 0 && (

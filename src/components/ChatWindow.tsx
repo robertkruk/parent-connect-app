@@ -5,6 +5,7 @@ import type { User } from '../types';
 import { mockChats, mockUsers, mockChildren, mockMessages } from '../data/mockData';
 import { formatTime, getInitials } from '../lib/utils';
 import { useChatStore } from '../stores/chatStore';
+import Avatar from './Avatar';
 
 interface ChatWindowProps {
   currentUser: User;
@@ -95,11 +96,12 @@ export default function ChatWindow({ currentUser, onMenuClick }: ChatWindowProps
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-primary-700">
-              {getInitials(getChatDisplayName())}
-            </span>
-          </div>
+          <Avatar 
+            src={chat.type === 'direct' ? getChatParticipants().find(p => p.id !== currentUser.id)?.avatar : undefined}
+            alt={getChatDisplayName()}
+            size="lg"
+            className="bg-primary-100"
+          />
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-gray-900">{getChatDisplayName()}</h2>
             <p className="text-sm text-gray-500 flex items-center">
@@ -190,11 +192,12 @@ export default function ChatWindow({ currentUser, onMenuClick }: ChatWindowProps
                 <div className={`max-w-xs lg:max-w-md ${isOwnMessage ? 'order-2' : 'order-1'}`}>
                   {!isOwnMessage && (
                     <div className="flex items-center space-x-2 mb-1">
-                      <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-medium text-primary-700">
-                          {getInitials(sender?.name || 'Unknown')}
-                        </span>
-                      </div>
+                      <Avatar 
+                        src={sender?.avatar}
+                        alt={sender?.name || 'Unknown'}
+                        size="sm"
+                        className="bg-primary-100"
+                      />
                       <span className="text-xs font-medium text-gray-700">
                         {getSenderName(message.senderId)}
                       </span>
