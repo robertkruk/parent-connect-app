@@ -64,10 +64,10 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
       try {
         setIsLoading(true);
         const apiChats = await apiService.getChats();
-        setChats(apiChats);
+        setChats(apiChats as any);
         
         if (apiChats.length > 0) {
-          setSelectedChat(apiChats[0]);
+          setSelectedChat(apiChats[0] as any);
           const chatMessages = await apiService.getMessages(apiChats[0].id);
           chatMessages.forEach(msg => {
             addMessage(apiChats[0].id, {
@@ -78,7 +78,7 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
               type: msg.type,
               attachments: msg.attachments,
               replyTo: msg.replyTo,
-              status: msg.status,
+              status: msg.status as any,
               createdAt: msg.createdAt,
               updatedAt: msg.updatedAt
             });
@@ -160,8 +160,8 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
           type: msg.type,
           attachments: msg.attachments,
           replyTo: msg.replyTo,
-          status: msg.status,
-          createdAt: msg.createdAt,
+                        status: msg.status as any,
+              createdAt: msg.createdAt,
           updatedAt: msg.updatedAt
         });
       });
@@ -313,7 +313,7 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
                 <div className="bg-white text-gray-900 border border-gray-200 p-3 rounded-lg">
                   <div className="text-xs text-gray-600 mb-1">
                     {Array.from(currentTypingUsers).map(userId => 
-                      users[userId] || `User ${userId}`
+                      users[userId as string] || `User ${userId}`
                     ).join(', ')} {currentTypingUsers.size === 1 ? 'is' : 'are'} typing...
                   </div>
                   <div className="flex space-x-1">

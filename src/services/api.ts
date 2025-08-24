@@ -94,10 +94,12 @@ class ApiService {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log('Making request to:', url);
+    console.log('Request options:', options);
     
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...options.headers as Record<string, string>,
     };
 
     const token = this.getToken();
@@ -105,38 +107,79 @@ class ApiService {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    console.log('Request headers:', headers);
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || `HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Response error:', error);
+        throw new Error(error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Response data:', data);
+      return data;
+    } catch (error) {
+      console.error('Request failed:', error);
+      throw error;
     }
-
-    return response.json();
   }
 
   // Authentication
   async login(email: string, password: string): Promise<{ token: string; user: User }> {
-    const response = await this.request<{ success: boolean; token: string; user: User }>('/auth/login', {
+    console.log('Attempting login with:', { email, password });
+    const response = await this.request<{ success: boolean; token: string; user: any }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
+    console.log('Login response:', response);
+    
+    // Transform user data to match the User interface
+    const user: User = {
+      id: response.user.id,
+      name: response.user.name,
+      email: response.user.email,
+      phone: response.user.phone,
+      isVerified: response.user.isVerified || true, // Default to true if not provided
+      children: response.user.children || []
+    };
     
     this.setToken(response.token);
-    return response;
+    return {
+      token: response.token,
+      user
+    };
   }
 
   async register(name: string, email: string, password: string, phone?: string): Promise<{ token: string; user: User }> {
-    const response = await this.request<{ success: boolean; token: string; user: User }>('/auth/register', {
+    const response = await this.request<{ success: boolean; token: string; user: any }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ name, email, password, phone }),
     });
     
+    // Transform user data to match the User interface
+    const user: User = {
+      id: response.user.id,
+      name: response.user.name,
+      email: response.user.email,
+      phone: response.user.phone,
+      isVerified: response.user.isVerified || false, // Default to false for new registrations
+      children: response.user.children || []
+    };
+    
     this.setToken(response.token);
-    return response;
+    return {
+      token: response.token,
+      user
+    };
   }
 
   // User profile
@@ -167,7 +210,26 @@ class ApiService {
 
   // Chats
   async getChats(): Promise<Chat[]> {
-    return this.request<Chat[]>('/chats');
+    const chats = await this.request<any[]>('/chats');
+    return chats.map(chat => ({
+      id: chat.id,
+      name: chat.name,
+      type: chat.type,
+      classId: chat.class_id,
+      unreadCount: chat.unreadCount || 0,
+      lastMessage: chat.lastMessage ? {
+        id: chat.lastMessage.id,
+        content: chat.lastMessage.content,
+        senderId: chat.lastMessage.sender_id,
+        chatId: chat.lastMessage.chat_id,
+        type: chat.lastMessage.type,
+        attachments: chat.lastMessage.attachments,
+        replyTo: chat.lastMessage.reply_to,
+        status: chat.lastMessage.status,
+        createdAt: chat.lastMessage.created_at,
+        updatedAt: chat.lastMessage.updated_at
+      } : undefined
+    }));
   }
 
   async getChat(chatId: string): Promise<Chat> {
@@ -180,7 +242,19 @@ class ApiService {
       limit: limit.toString(),
       offset: offset.toString(),
     });
-    return this.request<Message[]>(`/chats/${chatId}/messages?${params}`);
+    const messages = await this.request<any[]>(`/chats/${chatId}/messages?${params}`);
+    return messages.map(msg => ({
+      id: msg.id,
+      content: msg.content,
+      senderId: msg.sender_id,
+      chatId: msg.chat_id,
+      type: msg.type,
+      attachments: msg.attachments,
+      replyTo: msg.reply_to,
+      status: msg.status,
+      createdAt: msg.created_at,
+      updatedAt: msg.updated_at
+    }));
   }
 
   async sendMessage(chatId: string, content: string, type: 'text' | 'image' | 'file' | 'voice' = 'text', attachments?: string[], replyTo?: string): Promise<Message> {

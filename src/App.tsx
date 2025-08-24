@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { apiService, type User } from './services/api';
+import { apiService, type User, type Child } from './services/api';
 import { RealtimeChatLayout } from './components/RealtimeChatLayout';
 
 // Enhanced mock data with proper credentials for demo
@@ -13,7 +13,13 @@ const mockUsers = [
     password: 'password123',
     pin: '1234',
     isVerified: true,
-    children: ['Emma Johnson - 3rd Grade']
+    children: [{
+      id: 'emma-johnson',
+      name: 'Emma Johnson',
+      grade: '3rd Grade',
+      school: 'Lincoln Elementary',
+      parentId: '40e8b510-17bc-418e-894a-0d363f8758e7'
+    }]
   },
   { 
     id: 'a9836588-2316-4360-a670-ca306b5f3d57', 
@@ -23,7 +29,13 @@ const mockUsers = [
     password: 'password123',
     pin: '5678',
     isVerified: true,
-    children: ['Alex Chen - 3rd Grade']
+    children: [{
+      id: 'alex-chen',
+      name: 'Alex Chen',
+      grade: '3rd Grade',
+      school: 'Lincoln Elementary',
+      parentId: 'a9836588-2316-4360-a670-ca306b5f3d57'
+    }]
   },
   { 
     id: '5daf3326-c042-4ad9-a53b-3baaed0533e5', 
@@ -33,7 +45,13 @@ const mockUsers = [
     password: 'password123',
     pin: '9012',
     isVerified: true,
-    children: ['Sophia Rodriguez - 3rd Grade']
+    children: [{
+      id: 'sophia-rodriguez',
+      name: 'Sophia Rodriguez',
+      grade: '3rd Grade',
+      school: 'Lincoln Elementary',
+      parentId: '5daf3326-c042-4ad9-a53b-3baaed0533e5'
+    }]
   },
   { 
     id: '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36', 
@@ -43,7 +61,13 @@ const mockUsers = [
     password: 'password123',
     pin: '3456',
     isVerified: true,
-    children: ['James Thompson - 4th Grade']
+    children: [{
+      id: 'james-thompson',
+      name: 'James Thompson',
+      grade: '4th Grade',
+      school: 'Lincoln Elementary',
+      parentId: '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36'
+    }]
   },
   { 
     id: '162b123d-d09d-4e22-b061-19479110e5f6', 
@@ -53,12 +77,18 @@ const mockUsers = [
     password: 'password123',
     pin: '7890',
     isVerified: true,
-    children: ['Mia Wang - 3rd Grade']
+    children: [{
+      id: 'mia-wang',
+      name: 'Mia Wang',
+      grade: '3rd Grade',
+      school: 'Lincoln Elementary',
+      parentId: '162b123d-d09d-4e22-b061-19479110e5f6'
+    }]
   },
 ];
 
 // Enhanced Login Page Component
-function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
+function LoginPage({ onLogin }: { onLogin: (user: User) => void }) {
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -77,24 +107,35 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
     }
 
     try {
-      let user;
+      let response;
       if (loginMethod === 'email') {
-        // Use mock data for now
-        user = mockUsers.find(u => u.email === identifier && u.password === password);
+        // Use real API for email login
+        response = await apiService.login(identifier, password);
       } else {
-        // Mobile login - use mock data for now
-        user = mockUsers.find(u => u.phone === identifier && u.pin === password);
+        // For mobile login, we'll need to implement a separate endpoint
+        // For now, we'll use the mock data as fallback
+        const user = mockUsers.find(u => u.phone === identifier && u.pin === password);
+        if (user) {
+          // Generate a mock JWT token for the user
+          const mockToken = `mock-jwt-token-${user.id}`;
+          apiService.setToken(mockToken);
+          onLogin(user);
+          setIsLoading(false);
+          return;
+        } else {
+          setError('Invalid credentials. Please try again.');
+          setIsLoading(false);
+          return;
+        }
       }
 
-      if (user) {
-        // Generate a mock JWT token for the user
-        const mockToken = `mock-jwt-token-${user.id}`;
-        apiService.setToken(mockToken);
-        onLogin(user);
+      if (response && response.user) {
+        onLogin(response.user);
       } else {
         setError('Invalid credentials. Please try again.');
       }
     } catch (error) {
+      console.error('Login error:', error);
       setError('Login failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -300,7 +341,7 @@ function LoginPage({ onLogin }: { onLogin: (user: any) => void }) {
 }
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Check for existing authentication on app load
   useEffect(() => {

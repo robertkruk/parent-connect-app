@@ -14,6 +14,22 @@ import type {
 const JWT_SECRET = 'your-secret-key-change-in-production';
 
 const app = new Elysia()
+  .onRequest(({ request, set }) => {
+    // Add CORS headers
+    const origin = request.headers.get('origin');
+    if (origin && (origin.includes('localhost:5173') || origin.includes('localhost:5174') || origin.includes('localhost:3000'))) {
+      set.headers['Access-Control-Allow-Origin'] = origin;
+    } else {
+      set.headers['Access-Control-Allow-Origin'] = '*';
+    }
+    set.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+    set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+    set.headers['Access-Control-Allow-Credentials'] = 'true';
+  })
+  .options('*', () => {
+    // Handle preflight requests
+    return new Response(null, { status: 200 });
+  })
   .derive(({ request }) => ({
     getCurrentUser: async () => {
       const authHeader = request.headers.get('authorization');
