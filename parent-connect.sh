@@ -492,6 +492,12 @@ case "${1:-start}" in
         echo "  ./parent-connect.sh restart"
         echo "  ./parent-connect.sh status"
         echo "  ./parent-connect.sh force-kill"
+        echo
+        echo "Login Tips:"
+        echo "  - Enter username (e.g., 'Sarah Johnson')"
+        echo "  - Enter any password (demo mode)"
+        echo "  - Press Enter key to login (no mouse required)"
+        echo "  - Or click the 'Continue to ParentConnect' button"
         exit 1
         ;;
 esac

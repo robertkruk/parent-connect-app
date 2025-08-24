@@ -7,15 +7,39 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ onLogin }: LoginPageProps) {
-  const [selectedUser, setSelectedUser] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
 
   const handleLogin = () => {
-    if (selectedUser) {
-      const user = mockUsers.find(u => u.id === selectedUser);
+    console.log('handleLogin called', { username, password });
+    if (username && password) {
+      // For demo purposes, find user by username (using name field as username)
+      const user = mockUsers.find(u => u.name.toLowerCase() === username.toLowerCase());
       if (user) {
+        console.log('User found, logging in:', user);
         onLogin(user);
+      } else {
+        console.log('User not found');
+        alert('Invalid username or password. Please try again.');
       }
+    } else {
+      console.log('Missing username or password');
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    console.log('Key pressed:', e.key, 'Username:', username, 'Password:', password);
+    if (e.key === 'Enter' && username && password) {
+      console.log('Enter key pressed with valid credentials, calling handleLogin');
+      e.preventDefault();
+      handleLogin();
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    console.log('Form submitted');
+    e.preventDefault();
+    handleLogin();
   };
 
   return (
@@ -53,32 +77,62 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         </div>
 
         {/* Login Form */}
-        <div className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select your account
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              Username
             </label>
-            <select
-              value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Enter your username"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Choose a parent account...</option>
-              {mockUsers.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
+              autoComplete="username"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => {
+                console.log('Password field key pressed:', e.key);
+                if (e.key === 'Enter' && username && password) {
+                  console.log('Enter in password field, submitting form');
+                  e.preventDefault();
+                  handleLogin();
+                }
+              }}
+              placeholder="Enter your password"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              autoComplete="current-password"
+            />
           </div>
 
           <button
-            onClick={handleLogin}
-            disabled={!selectedUser}
+            type="submit"
+            disabled={!username || !password}
             className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Continue to ParentConnect
           </button>
+        </form>
+
+        {/* Demo Info */}
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-xs text-blue-700">
+            <strong>Demo Accounts:</strong><br/>
+            Username: "Sarah Johnson" (or any name from the list)<br/>
+            Password: any password (demo mode)
+          </p>
         </div>
 
         {/* Footer */}
