@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { apiService, type User } from './services/api';
 import { RealtimeChatLayout } from './components/RealtimeChatLayout';
+import ParentConnectIcon from './components/ParentConnectIcon';
 
 // Enhanced mock data with proper credentials for demo
 const mockUsers = [
@@ -171,17 +172,11 @@ function LoginPage({ onLogin }: { onLogin: (user: User) => void }) {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ 
-            background: '#667eea', 
-            width: '60px', 
-            height: '60px', 
-            borderRadius: '50%', 
             display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            margin: '0 auto 1rem',
-            fontSize: '24px'
+            justifyContent: 'center', 
+            marginBottom: '1rem' 
           }}>
-            💬
+            <ParentConnectIcon size="xl" />
           </div>
           <h1 style={{ color: '#333', marginBottom: '0.5rem', fontSize: '2rem' }}>
             ParentConnect

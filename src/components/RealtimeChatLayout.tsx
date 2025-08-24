@@ -3,6 +3,7 @@ import { useChatStore } from '../stores/chatStore';
 import { apiService } from '../services/api';
 import { MessageStatus } from '../services/websocket';
 import Avatar from './Avatar';
+import ParentConnectIcon from './ParentConnectIcon';
 
 interface RealtimeChatLayoutProps {
   currentUser: any;
@@ -218,6 +219,9 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
+          <div className="mb-4">
+            <ParentConnectIcon size="xl" />
+          </div>
           <div className="text-2xl mb-4">Loading...</div>
           <div className="text-sm text-gray-600">Connecting to ParentConnect</div>
         </div>
@@ -237,12 +241,7 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-2">
-                <Avatar 
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  size="md"
-                  className="bg-white bg-opacity-20"
-                />
+                <ParentConnectIcon size="md" className="bg-white bg-opacity-20" />
                 <div>
                   <h2 className="text-xl font-semibold">ParentConnect</h2>
                   <p className="text-sm opacity-90">{currentUser.name}</p>
