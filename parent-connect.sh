@@ -165,38 +165,46 @@ start_frontend() {
         fi
     fi
     
-    # Start frontend in background with separate log file
-    npm run dev > "frontend.log" 2>&1 &
+    # Start frontend in background with separate log file using nohup for better process management
+    nohup npm run dev > "frontend.log" 2>&1 &
     local frontend_pid=$!
     echo $frontend_pid > "$FRONTEND_PID_FILE"
     
-    # Wait longer for Vite to start up and check multiple times
+    # Wait a moment for the process to start and then get the actual Vite process PID
+    sleep 2
+    local vite_pid=$(pgrep -f "vite.*dev" | head -1)
+    if [ -n "$vite_pid" ]; then
+        echo $vite_pid > "$FRONTEND_PID_FILE"
+        frontend_pid=$vite_pid
+    fi
+    
+    # Wait for Vite to start up with simpler detection
     print_status "Waiting for frontend to start..."
-    local max_attempts=10
+    local max_attempts=20
     local attempt=0
     local frontend_ready=false
     
     while [ $attempt -lt $max_attempts ]; do
-        sleep 2
+        sleep 1
         attempt=$((attempt + 1))
         
         # Check if process is still running
         if ! is_process_running "$FRONTEND_PID_FILE"; then
             print_error "Frontend process died during startup"
+            print_status "Check frontend.log for error details"
             rm -f "$FRONTEND_PID_FILE"
             return 1
         fi
         
-        # Check if port is in use
+        # Simple check: if port is in use, consider it ready
         if is_port_in_use $FRONTEND_PORT; then
-            # Additional check: try to connect to the dev server
-            if curl -s "http://localhost:$FRONTEND_PORT" > /dev/null 2>&1; then
-                frontend_ready=true
-                break
-            fi
+            frontend_ready=true
+            break
         fi
         
-        print_status "Waiting for frontend... (attempt $attempt/$max_attempts)"
+        if [ $((attempt % 5)) -eq 0 ]; then
+            print_status "Waiting for frontend... (attempt $attempt/$max_attempts)"
+        fi
     done
     
     if $frontend_ready; then
@@ -246,10 +254,18 @@ start_backend() {
         fi
     fi
     
-    # Start backend in background with separate log file
-    bun run dev > "../backend.log" 2>&1 &
+    # Start backend in background with separate log file using nohup for better process management
+    nohup bun run dev > "../backend.log" 2>&1 &
     local backend_pid=$!
     echo $backend_pid > "../$BACKEND_PID_FILE"
+    
+    # Wait a moment for the process to start and then get the actual Bun process PID
+    sleep 2
+    local bun_pid=$(pgrep -f "bun.*dev" | head -1)
+    if [ -n "$bun_pid" ]; then
+        echo $bun_pid > "../$BACKEND_PID_FILE"
+        backend_pid=$bun_pid
+    fi
     
     # Wait longer for backend to start up and check multiple times
     print_status "Waiting for backend to start..."

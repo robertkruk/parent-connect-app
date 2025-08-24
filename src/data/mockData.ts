@@ -1,4 +1,4 @@
-import { User, Child, Class, Chat, Message } from '../types';
+import type { User, Child, Class, Chat, Message } from '../types';
 
 export const mockUsers: User[] = [
   {

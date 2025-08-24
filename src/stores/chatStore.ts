@@ -221,7 +221,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         console.log('👥 Fetched online users:', onlineUserIds);
         
         // Update the online users set
-        set(state => {
+        set(() => {
           const newOnlineUsers = new Set<string>(onlineUserIds);
           return { onlineUsers: newOnlineUsers };
         });

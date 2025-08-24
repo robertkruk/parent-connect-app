@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Send, Menu, MoreVertical, Users, Shield } from 'lucide-react';
-import { User, Message } from '../types';
+import { Send, Menu, MoreVertical } from 'lucide-react';
+import type { User } from '../types';
 import { mockChats, mockUsers, mockChildren, mockMessages } from '../data/mockData';
 import { formatTime, getInitials } from '../lib/utils';
 import { useChatStore } from '../stores/chatStore';

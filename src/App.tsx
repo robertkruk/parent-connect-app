@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { apiService, type User, type Child } from './services/api';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { apiService, type User } from './services/api';
 import { RealtimeChatLayout } from './components/RealtimeChatLayout';
 
 // Enhanced mock data with proper credentials for demo

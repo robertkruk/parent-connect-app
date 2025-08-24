@@ -30,17 +30,12 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
 
   const {
     messages,
-    messageStatus,
     onlineUsers,
     typingUsers,
     isConnected,
     chats,
     selectedChat,
     addMessage,
-    updateMessageStatus,
-    setTypingIndicator,
-    setUserOnline,
-    setConnectionStatus,
     setChats,
     setSelectedChat,
     clearChatMessages,

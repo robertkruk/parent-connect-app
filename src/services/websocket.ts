@@ -57,13 +57,15 @@ export interface AuthMessage extends WebSocketMessage {
   };
 }
 
-export enum MessageStatus {
-  SENDING = 'sending',
-  SENT = 'sent',
-  DELIVERED = 'delivered',
-  READ = 'read',
-  FAILED = 'failed'
-}
+export const MessageStatus = {
+  SENDING: 'sending',
+  SENT: 'sent',
+  DELIVERED: 'delivered',
+  READ: 'read',
+  FAILED: 'failed'
+} as const;
+
+export type MessageStatus = typeof MessageStatus[keyof typeof MessageStatus];
 
 export interface QueuedMessage {
   id: string;

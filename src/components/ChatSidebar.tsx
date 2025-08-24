@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Search, Plus, Settings, LogOut, User, Shield } from 'lucide-react';
-import { User as UserType, Chat } from '../types';
+import { Search, Plus, Settings, Shield } from 'lucide-react';
+import type { User as UserType, Chat } from '../types';
 import { mockChats, mockUsers, mockChildren } from '../data/mockData';
 import { formatTime, getInitials } from '../lib/utils';
 import { useChatStore } from '../stores/chatStore';
