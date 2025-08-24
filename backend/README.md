@@ -28,6 +28,25 @@ A high-performance backend for ParentConnect built with Bun and Elysia, providin
 
 ## 🚀 Quick Start
 
+### Using the Startup Script (Recommended)
+
+The easiest way to start the entire application (frontend + backend) is using the startup script from the project root:
+
+```bash
+# From the project root directory
+./parent-connect.sh start
+```
+
+This will automatically:
+- Install dependencies if needed
+- Start both frontend and backend
+- Handle port conflicts
+- Provide status monitoring
+
+### Manual Backend Setup
+
+If you prefer to run the backend manually:
+
 1. **Install Bun** (if not already installed):
 ```bash
 curl -fsSL https://bun.sh/install | bash

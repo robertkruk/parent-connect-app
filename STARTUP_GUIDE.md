@@ -1,8 +1,17 @@
 # Parent Connect App - Startup Guide
 
-## Quick Start
+## 🚀 Quick Start
 
-The `parent-connect.sh` script provides easy management of your Parent Connect App (frontend + backend).
+**The `parent-connect.sh` script is the recommended way to manage your Parent Connect App.** It handles both frontend and backend services automatically, eliminating the need to run `npm run dev` or `bun run dev` commands manually.
+
+### ⚠️ Important: Use the Startup Script
+
+Instead of running individual commands like:
+- ❌ `npm run dev` (frontend)
+- ❌ `bun run dev` (backend)
+
+Use the unified startup script:
+- ✅ `./parent-connect.sh start` (starts both services)
 
 ### Prerequisites
 
@@ -85,9 +94,11 @@ tail -f app.log
 **If you see port conflicts:**
 The script will automatically attempt to free occupied ports, but if that fails, use `force-kill` to manually clear them.
 
-### Manual Commands (if needed)
+### Manual Commands (Alternative - Not Recommended)
 
-If you prefer to run services manually:
+**Note:** The startup script is preferred as it handles dependency installation, process management, and error handling automatically.
+
+If you must run services manually:
 
 **Frontend:**
 ```bash
@@ -102,6 +113,14 @@ bun install
 bun run dev
 ```
 
+**Why use the startup script instead?**
+- ✅ Automatic dependency installation
+- ✅ Process management and monitoring
+- ✅ Port conflict resolution
+- ✅ Graceful shutdown handling
+- ✅ Unified logging
+- ✅ Health checks and error recovery
+
 ### Development Workflow
 
 1. **Start development**: `./parent-connect.sh start`
@@ -109,3 +128,12 @@ bun run dev
 3. **Check status**: `./parent-connect.sh status`
 4. **Restart if needed**: `./parent-connect.sh restart`
 5. **Stop when done**: `./parent-connect.sh stop`
+
+### Key Benefits of Using the Startup Script
+
+- **No Manual Commands**: No need to remember `npm run dev` or `bun run dev`
+- **Automatic Setup**: Dependencies are installed automatically
+- **Process Management**: Handles starting, stopping, and restarting both services
+- **Error Recovery**: Automatically handles port conflicts and process failures
+- **Unified Interface**: Single command to manage the entire application
+- **Production Ready**: Same script can be used in development and production

@@ -43,7 +43,9 @@ ParentConnect provides a solution by creating a dedicated, safe space for parent
 - Node.js (v16 or higher) for frontend
 - Bun (will be installed automatically for backend)
 
-### Frontend Setup
+### Quick Start (Recommended)
+
+The easiest way to get started is using the provided startup script:
 
 1. Clone the repository:
 ```bash
@@ -51,39 +53,64 @@ git clone <repository-url>
 cd parent-connect-app
 ```
 
-2. Install dependencies:
+2. Make the startup script executable:
 ```bash
-npm install
+chmod +x parent-connect.sh
 ```
 
-3. Start the frontend development server:
+3. Start the entire application (frontend + backend):
 ```bash
+./parent-connect.sh start
+```
+
+4. Access the application:
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:3000
+- **Swagger Documentation**: http://localhost:3000/swagger
+
+### Application Management
+
+The `parent-connect.sh` script provides easy management of your application:
+
+```bash
+# Start the application
+./parent-connect.sh start
+
+# Stop the application
+./parent-connect.sh stop
+
+# Restart the application
+./parent-connect.sh restart
+
+# Check current status
+./parent-connect.sh status
+
+# Gracefully shutdown
+./parent-connect.sh shutdown
+
+# Clean up PID files
+./parent-connect.sh cleanup
+
+# Force kill processes on app ports (emergency cleanup)
+./parent-connect.sh force-kill
+```
+
+### Manual Setup (Alternative)
+
+If you prefer to run services manually:
+
+**Frontend Setup:**
+```bash
+npm install
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
-
-### Backend Setup (Bun + Elysia)
-
-1. Navigate to the backend directory:
+**Backend Setup:**
 ```bash
 cd backend
-```
-
-2. Run the setup script:
-```bash
-chmod +x setup.sh
-./setup.sh
-```
-
-3. Start the backend server:
-```bash
+bun install
 bun run dev
 ```
-
-4. Access the backend:
-- API: http://localhost:3000
-- Swagger Documentation: http://localhost:3000/swagger
 
 ### Demo Accounts
 
