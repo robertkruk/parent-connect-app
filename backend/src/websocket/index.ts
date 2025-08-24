@@ -89,13 +89,21 @@ class WebSocketManager {
   private heartbeatInterval: NodeJS.Timeout | null = null;
 
   constructor(server: any) {
-    this.wss = new WebSocketServer({ server });
+    console.log('🔌 Creating WebSocket server on port 3001...');
+    // Create WebSocket server on a separate port for now
+    this.wss = new WebSocketServer({ port: 3001 });
+    console.log('🔌 WebSocket server created, setting up event handlers...');
     this.setupWebSocketServer();
+    console.log('🔌 Starting heartbeat...');
     this.startHeartbeat();
+    console.log('🔌 WebSocket server setup complete');
   }
 
   private setupWebSocketServer() {
+    console.log('🔌 Setting up WebSocket server event handlers...');
+    
     this.wss.on('connection', (ws, request) => {
+      console.log('🔌 WebSocket connection event triggered!');
       const connectionId = uuidv4();
       const connection: Connection = {
         id: connectionId,
@@ -111,7 +119,9 @@ class WebSocketManager {
 
       ws.on('message', (data) => {
         try {
+          console.log(`📨 Raw message received from ${connectionId}:`, data.toString());
           const message: WebSocketMessage = JSON.parse(data.toString());
+          console.log(`📨 Parsed message from ${connectionId}:`, message.type, message.data);
           this.handleMessage(connectionId, message);
         } catch (error) {
           console.error('❌ Error parsing WebSocket message:', error);
@@ -120,6 +130,7 @@ class WebSocketManager {
       });
 
       ws.on('close', () => {
+        console.log(`🔌 WebSocket connection closed: ${connectionId}`);
         this.handleDisconnection(connectionId);
       });
 
@@ -136,31 +147,42 @@ class WebSocketManager {
         data: { status: 'connected', connectionId }
       });
     });
+    
+    console.log('🔌 WebSocket server event handlers set up complete');
   }
 
   private async handleMessage(connectionId: string, message: WebSocketMessage) {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {
+      console.log(`❌ No connection found for ${connectionId}`);
+      return;
+    }
 
-    console.log(`📨 Received message from ${connectionId}:`, message.type);
+    console.log(`📨 Processing message from ${connectionId}:`, message.type);
 
     switch (message.type) {
       case 'auth':
+        console.log(`🔐 Processing auth message from ${connectionId}`);
         await this.handleAuth(connectionId, message as AuthMessage);
         break;
       case 'message':
+        console.log(`💬 Processing chat message from ${connectionId}`);
         await this.handleChatMessage(connectionId, message as ChatMessage);
         break;
       case 'typing':
+        console.log(`⌨️ Processing typing indicator from ${connectionId}`);
         await this.handleTypingIndicator(connectionId, message as TypingIndicator);
         break;
       case 'receipt':
+        console.log(`📋 Processing message receipt from ${connectionId}`);
         await this.handleMessageReceipt(connectionId, message as MessageReceipt);
         break;
       case 'heartbeat':
+        console.log(`💓 Processing heartbeat from ${connectionId}`);
         this.handleHeartbeat(connectionId);
         break;
       default:
+        console.log(`❓ Unknown message type from ${connectionId}:`, message.type);
         this.sendError(connectionId, `Unknown message type: ${message.type}`);
     }
   }

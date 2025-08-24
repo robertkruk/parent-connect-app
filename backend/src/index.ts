@@ -332,17 +332,26 @@ const app = new Elysia()
 const server = app.listen(3000);
 
 // Initialize WebSocket server after the HTTP server is running
-const wsManager = new WebSocketManager(server);
+console.log('🔌 Attempting to initialize WebSocket server...');
+let wsManager: any;
+try {
+  wsManager = new WebSocketManager(server);
+  console.log('🔌 WebSocket server initialized successfully');
+} catch (error) {
+  console.error('❌ Failed to initialize WebSocket server:', error);
+}
 
 console.log(
-  `🦊 ParentConnect server is running at ${server.hostname}:${server.port}`
+  `🦊 ParentConnect server is running on port 3000`
 );
 console.log('🔌 WebSocket server initialized');
 
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('\n🛑 Shutting down server...');
-  wsManager.stop();
+  if (wsManager) {
+    wsManager.stop();
+  }
   db.close();
   process.exit(0);
 });
