@@ -4,6 +4,7 @@ import { Send, Menu, MoreVertical, Users, Shield } from 'lucide-react';
 import { User, Message } from '../types';
 import { mockChats, mockUsers, mockChildren, mockMessages } from '../data/mockData';
 import { formatTime, getInitials } from '../lib/utils';
+import { useChatStore } from '../stores/chatStore';
 
 interface ChatWindowProps {
   currentUser: User;
@@ -16,6 +17,7 @@ export default function ChatWindow({ currentUser, onMenuClick }: ChatWindowProps
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showChatInfo, setShowChatInfo] = useState(false);
+  const { onlineUsers } = useChatStore();
 
   const chat = mockChats.find(c => c.id === chatId);
   const chatMessages = mockMessages.filter(m => m.chatId === chatId);
@@ -89,6 +91,7 @@ export default function ChatWindow({ currentUser, onMenuClick }: ChatWindowProps
           <button
             onClick={onMenuClick}
             className="md:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+            title="Toggle menu"
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -97,10 +100,22 @@ export default function ChatWindow({ currentUser, onMenuClick }: ChatWindowProps
               {getInitials(getChatDisplayName())}
             </span>
           </div>
-          <div>
+          <div className="flex-1">
             <h2 className="text-lg font-semibold text-gray-900">{getChatDisplayName()}</h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 flex items-center">
               {chat.type === 'class' ? 'Class Chat' : 'Direct message'}
+              {chat.type === 'direct' && (() => {
+                const otherParticipant = getChatParticipants().find(p => p.id !== currentUser.id);
+                const isOtherUserOnline = otherParticipant ? onlineUsers.has(otherParticipant.id) : false;
+                return (
+                  <span className="ml-2 flex items-center">
+                    <div className={`w-2 h-2 rounded-full mr-1 ${isOtherUserOnline ? 'bg-green-400' : 'bg-gray-400'}`}></div>
+                    <span className={isOtherUserOnline ? 'text-green-600' : 'text-gray-500'}>
+                      {isOtherUserOnline ? 'Online' : 'Offline'}
+                    </span>
+                  </span>
+                );
+              })()}
             </p>
           </div>
         </div>
@@ -123,16 +138,23 @@ export default function ChatWindow({ currentUser, onMenuClick }: ChatWindowProps
               <div className="mt-2 space-y-2">
                 {getChatParticipants().map(participant => {
                   const child = mockChildren.find(c => c.parentId === participant.id);
+                  const isOnline = onlineUsers.has(participant.id);
                   return (
                     <div key={participant.id} className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center relative">
                         <span className="text-xs font-medium text-primary-700">
                           {getInitials(participant.name)}
                         </span>
+                        <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${
+                          isOnline ? 'bg-green-400' : 'bg-gray-400'
+                        }`} title={isOnline ? 'Online' : 'Offline'}></div>
                       </div>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-600 flex items-center">
                         {participant.name}
                         {child && ` (${child.name}'s parent)`}
+                        <span className={`ml-1 text-xs ${isOnline ? 'text-green-600' : 'text-gray-500'}`}>
+                          {isOnline ? '• Online' : '• Offline'}
+                        </span>
                       </span>
                     </div>
                   );
@@ -235,6 +257,7 @@ export default function ChatWindow({ currentUser, onMenuClick }: ChatWindowProps
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
             className="p-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Send message"
           >
             <Send className="h-5 w-5" />
           </button>

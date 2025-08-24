@@ -242,25 +242,43 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
 
         {/* Chat List */}
         <div className="flex-1 overflow-y-auto">
-          {chats.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => handleChatSelect(chat)}
-              className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${
-                selectedChat?.id === chat.id ? 'bg-blue-50' : 'hover:bg-gray-50'
-              }`}
-            >
-              <div className="font-semibold text-gray-900">{getChatDisplayName(chat)}</div>
-              <div className="text-sm text-gray-600">
-                {chat.type === 'class' ? 'Class Chat' : 'Direct Message'}
-              </div>
-              {chat.unreadCount && chat.unreadCount > 0 && (
-                <div className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-1">
-                  {chat.unreadCount}
+          {chats.map((chat: any) => {
+            // Get other participants in the chat (excluding current user)
+            const otherParticipants = chat.participants?.filter((p: string) => p !== currentUser.id) || [];
+            
+            // Check if any other participants are online
+            const onlineParticipants = otherParticipants.filter((userId: string) => onlineUsers.has(userId));
+            const isAnyOtherUserOnline = onlineParticipants.length > 0;
+            
+            return (
+              <div
+                key={chat.id}
+                onClick={() => handleChatSelect(chat)}
+                className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${
+                  selectedChat?.id === chat.id ? 'bg-blue-50' : 'hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold text-gray-900">{getChatDisplayName(chat)}</div>
+                  {chat.type === 'direct' && (
+                    <div className={`w-2 h-2 rounded-full ${isAnyOtherUserOnline ? 'bg-green-400' : 'bg-gray-400'}`} 
+                         title={isAnyOtherUserOnline ? 'Online' : 'Offline'}></div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+                <div className="text-sm text-gray-600">
+                  {chat.type === 'class' ? 'Class Chat' : 'Direct Message'}
+                  {chat.type === 'direct' && isAnyOtherUserOnline && (
+                    <span className="ml-2 text-green-600">• Online</span>
+                  )}
+                </div>
+                {chat.unreadCount && chat.unreadCount > 0 && (
+                  <div className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-1">
+                    {chat.unreadCount}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -271,10 +289,22 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
           <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
             {getChatDisplayName(selectedChat)?.charAt(0) || 'C'}
           </div>
-          <div>
+          <div className="flex-1">
             <div className="font-semibold text-gray-900">{selectedChat ? getChatDisplayName(selectedChat) : 'Select a chat'}</div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 flex items-center">
               {selectedChat?.type === 'class' ? 'Class Chat' : 'Direct Message'}
+              {selectedChat?.type === 'direct' && (() => {
+                const otherParticipantId = (selectedChat as any).participants?.find((p: string) => p !== currentUser.id);
+                const isOtherUserOnline = otherParticipantId ? onlineUsers.has(otherParticipantId) : false;
+                return (
+                  <span className="ml-2 flex items-center">
+                    <div className={`w-2 h-2 rounded-full mr-1 ${isOtherUserOnline ? 'bg-green-400' : 'bg-gray-400'}`}></div>
+                    <span className={isOtherUserOnline ? 'text-green-600' : 'text-gray-500'}>
+                      {isOtherUserOnline ? 'Online' : 'Offline'}
+                    </span>
+                  </span>
+                );
+              })()}
             </div>
           </div>
         </div>
