@@ -66,7 +66,7 @@ export default function ChatWindow({ currentUser, onMenuClick }: ChatWindowProps
       return chat.name;
     } else if (chat.type === 'direct') {
       const otherParticipant = getChatParticipants().find(p => p.id !== currentUser.id);
-      return otherParticipant?.name || chat.name;
+      return otherParticipant?.name || 'Unknown User';
     }
     return chat.name;
   };
@@ -100,13 +100,14 @@ export default function ChatWindow({ currentUser, onMenuClick }: ChatWindowProps
           <div>
             <h2 className="text-lg font-semibold text-gray-900">{getChatDisplayName()}</h2>
             <p className="text-sm text-gray-500">
-              {chat.type === 'class' ? 'Class Chat' : `${getChatParticipants().length} participants`}
+              {chat.type === 'class' ? 'Class Chat' : 'Direct message'}
             </p>
           </div>
         </div>
         <button
           onClick={() => setShowChatInfo(!showChatInfo)}
           className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+          title="Chat information"
         >
           <MoreVertical className="h-5 w-5" />
         </button>

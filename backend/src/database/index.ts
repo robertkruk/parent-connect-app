@@ -154,6 +154,15 @@ class DatabaseService {
     stmt.run(chatId, userId);
   }
 
+  getChatParticipants(chatId: string) {
+    const stmt = this.db.prepare(`
+      SELECT user_id FROM chat_participants 
+      WHERE chat_id = ?
+    `);
+    const participants = stmt.all(chatId) as { user_id: string }[];
+    return participants.map(p => p.user_id);
+  }
+
   // Message operations
   createMessage(message: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) {
     const id = crypto.randomUUID();

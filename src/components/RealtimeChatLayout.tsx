@@ -17,6 +17,17 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const getChatDisplayName = (chat: any) => {
+    if (chat.type === 'class') {
+      return chat.name;
+    } else if (chat.type === 'direct') {
+      // For direct messages, find the other participant
+      const otherParticipantId = chat.participants?.find((p: string) => p !== currentUser.id);
+      return users[otherParticipantId] || 'Unknown User';
+    }
+    return chat.name;
+  };
+
   const {
     messages,
     messageStatus,
@@ -239,7 +250,7 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
                 selectedChat?.id === chat.id ? 'bg-blue-50' : 'hover:bg-gray-50'
               }`}
             >
-              <div className="font-semibold text-gray-900">{chat.name}</div>
+              <div className="font-semibold text-gray-900">{getChatDisplayName(chat)}</div>
               <div className="text-sm text-gray-600">
                 {chat.type === 'class' ? 'Class Chat' : 'Direct Message'}
               </div>
@@ -258,10 +269,10 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
         {/* Chat Header */}
         <div className="p-4 bg-white border-b border-gray-200 flex items-center">
           <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-            {selectedChat?.name.charAt(0) || 'C'}
+            {getChatDisplayName(selectedChat)?.charAt(0) || 'C'}
           </div>
           <div>
-            <div className="font-semibold text-gray-900">{selectedChat?.name || 'Select a chat'}</div>
+            <div className="font-semibold text-gray-900">{selectedChat ? getChatDisplayName(selectedChat) : 'Select a chat'}</div>
             <div className="text-sm text-gray-600">
               {selectedChat?.type === 'class' ? 'Class Chat' : 'Direct Message'}
             </div>

@@ -201,11 +201,13 @@ const app = new Elysia()
       const chatsWithDetails = chats.map(chat => {
         const unreadCount = db.getUnreadMessageCount(chat.id, user.id);
         const lastMessage = db.getMessagesByChatId(chat.id, 1, 0)[0];
+        const participants = db.getChatParticipants(chat.id);
         
         return {
           ...chat,
           unreadCount,
-          lastMessage
+          lastMessage,
+          participants
         };
       });
       

@@ -32,8 +32,9 @@ export default function ChatSidebar({ currentUser, onChatSelect, selectedChatId 
     if (chat.type === 'class') {
       return chat.name;
     } else if (chat.type === 'direct') {
-      const otherParticipant = getChatParticipants(chat).find(p => p.id !== currentUser.id);
-      return otherParticipant?.name || chat.name;
+      const participants = getChatParticipants(chat);
+      const otherParticipant = participants.find(p => p.id !== currentUser.id);
+      return otherParticipant?.name || 'Unknown User';
     }
     return chat.name;
   };
@@ -45,7 +46,7 @@ export default function ChatSidebar({ currentUser, onChatSelect, selectedChatId 
     } else if (chat.type === 'direct') {
       const otherParticipant = getChatParticipants(chat).find(p => p.id !== currentUser.id);
       const otherChild = mockChildren.find(child => child.parentId === otherParticipant?.id);
-      return otherChild ? `${otherChild.name}'s parent` : 'Direct message';
+      return otherChild ? `${otherChild.name}'s parent` : 'Direct message with parent';
     }
     return `${chat.participants.length} participants`;
   };

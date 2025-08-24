@@ -38,6 +38,7 @@ export interface Chat {
   name: string;
   type: 'class' | 'direct' | 'group';
   classId?: string;
+  participants?: string[];
   unreadCount?: number;
   lastMessage?: Message;
 }
@@ -216,6 +217,7 @@ class ApiService {
       name: chat.name,
       type: chat.type,
       classId: chat.class_id,
+      participants: chat.participants,
       unreadCount: chat.unreadCount || 0,
       lastMessage: chat.lastMessage ? {
         id: chat.lastMessage.id,
