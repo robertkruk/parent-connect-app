@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { websocketService, type ChatMessage, type MessageStatus } from '../services/websocket';
+import { websocketService, type ChatMessage, MessageStatus } from '../services/websocket';
+import { apiService } from '../services/api';
 
 export interface Message {
   id: string;
@@ -48,7 +49,7 @@ interface ChatState {
   setChats: (chats: Chat[]) => void;
   setSelectedChat: (chat: Chat | null) => void;
   clearChatMessages: (chatId: string) => void;
-  markMessageAsRead: (messageId: string) => void;
+  markMessageAsRead: (messageId: string) => Promise<void>;
   
   // WebSocket integration
   initializeWebSocket: (token: string) => Promise<void>;
@@ -72,14 +73,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
   addMessage: (chatId: string, message: Message) => {
     set((state) => {
       const currentMessages = state.messages.get(chatId) || [];
-      const updatedMessages = [...currentMessages, message];
+      
+      // Check if message already exists to prevent duplicates
+      const messageExists = currentMessages.some(existingMsg => existingMsg.id === message.id);
+      if (messageExists) {
+        console.log('🚫 Duplicate message prevented:', message.id);
+        return state; // Return unchanged state if message already exists
+      }
+      
+      console.log('✅ Adding new message:', message.id, 'to chat:', chatId);
+      const updatedMessages = [...currentMessages, message]
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       
       const newMessages = new Map(state.messages);
       newMessages.set(chatId, updatedMessages);
       
       return {
         messages: newMessages,
-        messageStatus: new Map(state.messageStatus).set(message.id, message.status || 'sent')
+        messageStatus: new Map(state.messageStatus).set(message.id, message.status || MessageStatus.SENT)
       };
     });
   },
@@ -89,7 +100,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const newMessageStatus = new Map(state.messageStatus);
       newMessageStatus.set(messageId, status);
       
-      return { messageStatus: newMessageStatus };
+      // Also update the message objects in the messages Map
+      const newMessages = new Map(state.messages);
+      for (const [chatId, messages] of newMessages) {
+        const updatedMessages = messages.map(msg => 
+          msg.id === messageId ? { ...msg, status } : msg
+        );
+        newMessages.set(chatId, updatedMessages);
+      }
+      
+      return { 
+        messageStatus: newMessageStatus,
+        messages: newMessages
+      };
     });
   },
 
@@ -143,18 +166,32 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   clearChatMessages: (chatId: string) => {
     set((state) => {
+      const currentMessages = state.messages.get(chatId) || [];
+      console.log('🧹 Clearing messages for chat:', chatId, 'Count:', currentMessages.length);
       const newMessages = new Map(state.messages);
       newMessages.set(chatId, []);
       return { messages: newMessages };
     });
   },
 
-  markMessageAsRead: (messageId: string) => {
-    // Update local status
-    get().updateMessageStatus(messageId, 'read');
-    
-    // Send read receipt via WebSocket
-    websocketService.markMessageAsRead(messageId);
+  markMessageAsRead: async (messageId: string) => {
+    try {
+      // Update local status immediately for optimistic UI update
+      get().updateMessageStatus(messageId, MessageStatus.READ);
+      
+      // Send read receipt via WebSocket
+      websocketService.markMessageAsRead(messageId);
+      
+      // Also persist to database via REST API
+      const selectedChat = get().selectedChat;
+      if (selectedChat) {
+        await apiService.markMessageAsRead(selectedChat.id, messageId);
+      }
+    } catch (error) {
+      console.error('Failed to mark message as read:', error);
+      // Revert local status on error
+      get().updateMessageStatus(messageId, MessageStatus.DELIVERED);
+    }
   },
 
   // WebSocket integration
@@ -170,7 +207,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           type: message.data.messageType,
           attachments: message.data.attachments,
           replyTo: message.data.replyTo,
-          status: 'delivered',
+          status: MessageStatus.DELIVERED,
           createdAt: new Date(message.data.timestamp).toISOString(),
           updatedAt: new Date(message.data.timestamp).toISOString()
         };
@@ -202,6 +239,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // Connect to WebSocket
       await websocketService.connect(token);
       
+      // Fetch current online users after WebSocket connection is established
+      try {
+        const onlineUsersResponse = await apiService.getOnlineUsers();
+        const onlineUserIds = onlineUsersResponse.map((user: { userId: string }) => user.userId);
+        console.log('👥 Fetched online users:', onlineUserIds);
+        
+        // Update the online users set
+        set(() => {
+          const newOnlineUsers = new Set<string>(onlineUserIds);
+          return { onlineUsers: newOnlineUsers };
+        });
+      } catch (error) {
+        console.error('Failed to fetch online users:', error);
+      }
+      
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
       throw error;
@@ -228,7 +280,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         type,
         attachments,
         replyTo,
-        status: 'sending',
+        status: MessageStatus.SENDING,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -240,13 +292,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const messageId = await websocketService.sendMessage(chatId, content, type, attachments, replyTo);
       
       // Update message status to sent
-      get().updateMessageStatus(optimisticMessage.id, 'sent');
+      get().updateMessageStatus(optimisticMessage.id, MessageStatus.SENT);
       
       return messageId;
     } catch (error) {
       console.error('Failed to send message:', error);
       // Update message status to failed
-      get().updateMessageStatus(`temp-${Date.now()}`, 'failed');
+      get().updateMessageStatus(`temp-${Date.now()}`, MessageStatus.FAILED);
       throw error;
     }
   },

@@ -55,6 +55,14 @@ export interface ParentWithChildren extends User {
   children: Child[];
 }
 
-export interface ChatWithParticipants extends Chat {
+export interface ChatWithParticipants {
+  id: string;
+  name: string;
+  type: 'class' | 'direct' | 'group';
   participants: ParentWithChildren[];
+  classId?: string; // For class chats
+  lastMessage?: Message;
+  unreadCount: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

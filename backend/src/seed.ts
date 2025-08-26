@@ -13,6 +13,7 @@ async function seedDatabase() {
       email: 'sarah.johnson@email.com',
       password: hashedPassword,
       phone: '+1-555-0123',
+      avatar: 'https://i.pravatar.cc/150?img=1',
       isVerified: true
     });
 
@@ -21,6 +22,7 @@ async function seedDatabase() {
       email: 'michael.chen@email.com',
       password: hashedPassword,
       phone: '+1-555-0124',
+      avatar: 'https://i.pravatar.cc/150?img=2',
       isVerified: true
     });
 
@@ -29,6 +31,7 @@ async function seedDatabase() {
       email: 'emily.rodriguez@email.com',
       password: hashedPassword,
       phone: '+1-555-0125',
+      avatar: 'https://i.pravatar.cc/150?img=3',
       isVerified: true
     });
 
@@ -37,6 +40,7 @@ async function seedDatabase() {
       email: 'david.thompson@email.com',
       password: hashedPassword,
       phone: '+1-555-0126',
+      avatar: 'https://i.pravatar.cc/150?img=4',
       isVerified: true
     });
 
@@ -45,6 +49,7 @@ async function seedDatabase() {
       email: 'lisa.wang@email.com',
       password: hashedPassword,
       phone: '+1-555-0127',
+      avatar: 'https://i.pravatar.cc/150?img=5',
       isVerified: true
     });
 
@@ -55,35 +60,40 @@ async function seedDatabase() {
       name: 'Emma Johnson',
       grade: '3rd Grade',
       school: 'Lincoln Elementary',
-      parentId: sarah.id
+      parentId: sarah.id,
+      avatar: 'https://i.pravatar.cc/150?img=6'
     });
 
     const alex = db.createChild({
       name: 'Alex Chen',
       grade: '3rd Grade',
       school: 'Lincoln Elementary',
-      parentId: michael.id
+      parentId: michael.id,
+      avatar: 'https://i.pravatar.cc/150?img=7'
     });
 
     const sophia = db.createChild({
       name: 'Sophia Rodriguez',
       grade: '3rd Grade',
       school: 'Lincoln Elementary',
-      parentId: emily.id
+      parentId: emily.id,
+      avatar: 'https://i.pravatar.cc/150?img=8'
     });
 
     const james = db.createChild({
       name: 'James Thompson',
       grade: '4th Grade',
       school: 'Lincoln Elementary',
-      parentId: david.id
+      parentId: david.id,
+      avatar: 'https://i.pravatar.cc/150?img=9'
     });
 
     const mia = db.createChild({
       name: 'Mia Wang',
       grade: '3rd Grade',
       school: 'Lincoln Elementary',
-      parentId: lisa.id
+      parentId: lisa.id,
+      avatar: 'https://i.pravatar.cc/150?img=10'
     });
 
     console.log('✅ Created demo children');

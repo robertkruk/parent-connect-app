@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../stores/chatStore';
 import { apiService } from '../services/api';
 import { MessageStatus } from '../services/websocket';
+import Avatar from './Avatar';
+import ParentConnectIcon from './ParentConnectIcon';
 
 interface RealtimeChatLayoutProps {
   currentUser: any;
@@ -17,19 +19,25 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const getChatDisplayName = (chat: any) => {
+    if (chat.type === 'class') {
+      return chat.name;
+    } else if (chat.type === 'direct') {
+      // For direct messages, find the other participant
+      const otherParticipantId = chat.participants?.find((p: string) => p !== currentUser.id);
+      return users[otherParticipantId] || 'Unknown User';
+    }
+    return chat.name;
+  };
+
   const {
     messages,
-    messageStatus,
     onlineUsers,
     typingUsers,
     isConnected,
     chats,
     selectedChat,
     addMessage,
-    updateMessageStatus,
-    setTypingIndicator,
-    setUserOnline,
-    setConnectionStatus,
     setChats,
     setSelectedChat,
     clearChatMessages,
@@ -68,6 +76,8 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
         
         if (apiChats.length > 0) {
           setSelectedChat(apiChats[0] as any);
+          // Clear existing messages for the initial chat
+          clearChatMessages(apiChats[0].id);
           const chatMessages = await apiService.getMessages(apiChats[0].id);
           chatMessages.forEach(msg => {
             addMessage(apiChats[0].id, {
@@ -85,14 +95,32 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
           });
         }
         
-        const userNames = {
-          '40e8b510-17bc-418e-894a-0d363f8758e7': 'Sarah Johnson',
-          'a9836588-2316-4360-a670-ca306b5f3d57': 'Michael Chen', 
-          '5daf3326-c042-4ad9-a53b-3baaed0533e5': 'Emily Rodriguez',
-          '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36': 'David Thompson',
-          '162b123d-d09d-4e22-b061-19479110e5f6': 'Lisa Wang'
-        };
-        setUsers(userNames);
+        // Fetch all users to build the user mapping
+        try {
+          const allUsers = await apiService.getAllUsers();
+          const userNames: {[key: string]: string} = {};
+          const userAvatars: {[key: string]: string} = {};
+          allUsers.forEach((user: any) => {
+            userNames[user.id] = user.name;
+            if (user.avatar) {
+              userAvatars[user.id] = user.avatar;
+            }
+          });
+          setUsers(userNames);
+          // Store avatars in a ref or state for use in message rendering
+          (window as any).userAvatars = userAvatars;
+        } catch (error) {
+          console.error('Failed to fetch users, using fallback mapping:', error);
+          // Fallback to hardcoded mapping if API fails
+          const userNames = {
+            '40e8b510-17bc-418e-894a-0d363f8758e7': 'Sarah Johnson',
+            'a9836588-2316-4360-a670-ca306b5f3d57': 'Michael Chen', 
+            '5daf3326-c042-4ad9-a53b-3baaed0533e5': 'Emily Rodriguez',
+            '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36': 'David Thompson',
+            '162b123d-d09d-4e22-b061-19479110e5f6': 'Lisa Wang'
+          };
+          setUsers(userNames);
+        }
       } catch (error) {
         console.error('Error loading chat data:', error);
         setError('Failed to load chat data');
@@ -102,7 +130,7 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
     };
 
     loadData();
-  }, [addMessage, setChats, setSelectedChat]);
+  }, [addMessage, setChats, setSelectedChat, clearChatMessages]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -149,6 +177,8 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
 
   const handleChatSelect = async (chat: any) => {
     setSelectedChat(chat);
+    // Clear existing messages for this chat before loading new ones
+    clearChatMessages(chat.id);
     try {
       const chatMessages = await apiService.getMessages(chat.id);
       chatMessages.forEach(msg => {
@@ -160,8 +190,8 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
           type: msg.type,
           attachments: msg.attachments,
           replyTo: msg.replyTo,
-                        status: msg.status as any,
-              createdAt: msg.createdAt,
+          status: msg.status as any,
+          createdAt: msg.createdAt,
           updatedAt: msg.updatedAt
         });
       });
@@ -170,8 +200,12 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
     }
   };
 
-  const handleMessageRead = (messageId: string) => {
-    markMessageAsRead(messageId);
+  const handleMessageRead = async (messageId: string) => {
+    try {
+      await markMessageAsRead(messageId);
+    } catch (error) {
+      console.error('Failed to mark message as read:', error);
+    }
   };
 
   const getMessageStatusIcon = (status?: MessageStatus) => {
@@ -189,6 +223,9 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
+          <div className="mb-4">
+            <ParentConnectIcon size="xl" />
+          </div>
           <div className="text-2xl mb-4">Loading...</div>
           <div className="text-sm text-gray-600">Connecting to ParentConnect</div>
         </div>
@@ -196,7 +233,10 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
     );
   }
 
-  const currentChatMessages = selectedChat ? messages.get(selectedChat.id) || [] : [];
+  const currentChatMessages = selectedChat ? 
+    (messages.get(selectedChat.id) || []).sort((a, b) => 
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    ) : [];
   const currentTypingUsers = selectedChat ? typingUsers.get(selectedChat.id) || new Set() : new Set();
 
   return (
@@ -207,8 +247,13 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
         <div className="p-4 bg-blue-600 text-white">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <h2 className="text-xl font-semibold">ParentConnect</h2>
-              <p className="text-sm opacity-90 mt-1">{currentUser.name}</p>
+              <div className="flex items-center space-x-3 mb-2">
+                <ParentConnectIcon size="md" className="bg-white bg-opacity-20" />
+                <div>
+                  <h2 className="text-xl font-semibold">ParentConnect</h2>
+                  <p className="text-sm opacity-90">{currentUser.name}</p>
+                </div>
+              </div>
               <div className="flex items-center mt-2">
                 <div className={`w-2 h-2 rounded-full mr-2 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
                 <span className="text-xs">
@@ -227,25 +272,43 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
 
         {/* Chat List */}
         <div className="flex-1 overflow-y-auto">
-          {chats.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => handleChatSelect(chat)}
-              className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${
-                selectedChat?.id === chat.id ? 'bg-blue-50' : 'hover:bg-gray-50'
-              }`}
-            >
-              <div className="font-semibold text-gray-900">{chat.name}</div>
-              <div className="text-sm text-gray-600">
-                {chat.type === 'class' ? 'Class Chat' : 'Direct Message'}
-              </div>
-              {chat.unreadCount && chat.unreadCount > 0 && (
-                <div className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-1">
-                  {chat.unreadCount}
+          {chats.map((chat: any) => {
+            // Get other participants in the chat (excluding current user)
+            const otherParticipants = chat.participants?.filter((p: string) => p !== currentUser.id) || [];
+            
+            // Check if any other participants are online
+            const onlineParticipants = otherParticipants.filter((userId: string) => onlineUsers.has(userId));
+            const isAnyOtherUserOnline = onlineParticipants.length > 0;
+            
+            return (
+              <div
+                key={chat.id}
+                onClick={() => handleChatSelect(chat)}
+                className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${
+                  selectedChat?.id === chat.id ? 'bg-blue-50' : 'hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold text-gray-900">{getChatDisplayName(chat)}</div>
+                  {chat.type === 'direct' && (
+                    <div className={`w-2 h-2 rounded-full ${isAnyOtherUserOnline ? 'bg-green-400' : 'bg-gray-400'}`} 
+                         title={isAnyOtherUserOnline ? 'Online' : 'Offline'}></div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+                <div className="text-sm text-gray-600">
+                  {chat.type === 'class' ? 'Class Chat' : 'Direct Message'}
+                  {chat.type === 'direct' && isAnyOtherUserOnline && (
+                    <span className="ml-2 text-green-600">• Online</span>
+                  )}
+                </div>
+                {chat.unreadCount && chat.unreadCount > 0 && (
+                  <div className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-1">
+                    {chat.unreadCount}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -253,58 +316,99 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
       <div className="flex-1 flex flex-col">
         {/* Chat Header */}
         <div className="p-4 bg-white border-b border-gray-200 flex items-center">
-          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-            {selectedChat?.name.charAt(0) || 'C'}
-          </div>
-          <div>
-            <div className="font-semibold text-gray-900">{selectedChat?.name || 'Select a chat'}</div>
-            <div className="text-sm text-gray-600">
+          <Avatar 
+            src={selectedChat?.type === 'direct' ? 
+              (() => {
+                const otherParticipantId = (selectedChat as any).participants?.find((p: string) => p !== currentUser.id);
+                // For demo purposes, map user IDs to mock avatars
+                const avatarMap: {[key: string]: string} = {
+                  '40e8b510-17bc-418e-894a-0d363f8758e7': 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+                  'a9836588-2316-4360-a670-ca306b5f3d57': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+                  '5daf3326-c042-4ad9-a53b-3baaed0533e5': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+                  '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+                };
+                return avatarMap[otherParticipantId] || undefined;
+              })() : undefined
+            }
+            alt={getChatDisplayName(selectedChat) || 'Chat'}
+            size="lg"
+            className="mr-3 bg-blue-600"
+          />
+          <div className="flex-1">
+            <div className="font-semibold text-gray-900">{selectedChat ? getChatDisplayName(selectedChat) : 'Select a chat'}</div>
+            <div className="text-sm text-gray-600 flex items-center">
               {selectedChat?.type === 'class' ? 'Class Chat' : 'Direct Message'}
+              {selectedChat?.type === 'direct' && (() => {
+                const otherParticipantId = (selectedChat as any).participants?.find((p: string) => p !== currentUser.id);
+                const isOtherUserOnline = otherParticipantId ? onlineUsers.has(otherParticipantId) : false;
+                return (
+                  <span className="ml-2 flex items-center">
+                    <div className={`w-2 h-2 rounded-full mr-1 ${isOtherUserOnline ? 'bg-green-400' : 'bg-gray-400'}`}></div>
+                    <span className={isOtherUserOnline ? 'text-green-600' : 'text-gray-500'}>
+                      {isOtherUserOnline ? 'Online' : 'Offline'}
+                    </span>
+                  </span>
+                );
+              })()}
             </div>
           </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
-          {currentChatMessages.map((msg) => (
-            <div key={msg.id} className="mb-4">
-              <div className={`max-w-xs lg:max-w-md ${
-                msg.senderId === currentUser.id ? 'ml-auto' : 'mr-auto'
-              }`}>
-                <div className={`p-3 rounded-lg ${
-                  msg.senderId === currentUser.id 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-white text-gray-900 border border-gray-200'
-                }`}>
-                  <div className="text-xs opacity-80 mb-1">
-                    {msg.senderId === currentUser.id ? currentUser.name : (users[msg.senderId] || `User ${msg.senderId}`)}
-                  </div>
-                  <div>{msg.content}</div>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-xs opacity-70">
-                      {new Date(msg.createdAt).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </div>
-                    {msg.senderId === currentUser.id && (
-                      <div className="text-xs text-gray-400">
-                        {getMessageStatusIcon(msg.status)}
+          {currentChatMessages.map((msg) => {
+            const isOwnMessage = msg.senderId === currentUser.id;
+            
+            return (
+              <div key={msg.id} className="mb-4">
+                <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-xs lg:max-w-md ${isOwnMessage ? 'order-2' : 'order-1'}`}>
+                    {!isOwnMessage && (
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Avatar 
+                          src={(window as any).userAvatars?.[msg.senderId] || undefined}
+                          alt={users[msg.senderId] || `User ${msg.senderId}`}
+                          size="sm"
+                          className="bg-gray-200"
+                        />
+                        <span className="text-xs font-medium text-gray-700">
+                          {msg.senderId === currentUser.id ? currentUser.name : (users[msg.senderId] || `User ${msg.senderId}`)}
+                        </span>
                       </div>
+                    )}
+                    <div className={`p-3 rounded-lg ${
+                      isOwnMessage 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-white text-gray-900 border border-gray-200'
+                    }`}>
+                      <div>{msg.content}</div>
+                      <div className="flex items-center justify-between mt-2">
+                        <div className={`text-xs ${isOwnMessage ? 'opacity-70' : 'opacity-70'}`}>
+                          {new Date(msg.createdAt).toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </div>
+                        {isOwnMessage && (
+                          <div className="text-xs text-gray-400">
+                            {getMessageStatusIcon(msg.status)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {!isOwnMessage && (
+                      <button
+                        onClick={() => handleMessageRead(msg.id)}
+                        className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                      >
+                        Mark as read
+                      </button>
                     )}
                   </div>
                 </div>
-                {msg.senderId !== currentUser.id && (
-                  <button
-                    onClick={() => handleMessageRead(msg.id)}
-                    className="text-xs text-blue-600 hover:text-blue-800 mt-1"
-                  >
-                    Mark as read
-                  </button>
-                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
           
           {/* Typing indicators */}
           {currentTypingUsers.size > 0 && (

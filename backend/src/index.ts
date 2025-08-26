@@ -78,6 +78,7 @@ const app = new Elysia()
           name: user.name,
           email: user.email,
           phone: user.phone,
+          avatar: user.avatar,
           isVerified: user.isVerified
         }
       };
@@ -115,6 +116,7 @@ const app = new Elysia()
           name: user.name,
           email: user.email,
           phone: user.phone,
+          avatar: user.avatar,
           isVerified: user.isVerified
         }
       };
@@ -139,6 +141,23 @@ const app = new Elysia()
         children,
         password: undefined // Don't send password
       };
+    })
+    .get('/', async ({ getCurrentUser }) => {
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error('Unauthorized');
+      }
+      
+      const allUsers = db.getAllUsers();
+      return allUsers.map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone,
+        avatar: u.avatar,
+        isVerified: u.isVerified,
+        password: undefined // Don't send password
+      }));
     })
     .get('/presence', async ({ getCurrentUser }) => {
       const user = await getCurrentUser();
@@ -201,11 +220,13 @@ const app = new Elysia()
       const chatsWithDetails = chats.map(chat => {
         const unreadCount = db.getUnreadMessageCount(chat.id, user.id);
         const lastMessage = db.getMessagesByChatId(chat.id, 1, 0)[0];
+        const participants = db.getChatParticipants(chat.id);
         
         return {
           ...chat,
           unreadCount,
-          lastMessage
+          lastMessage,
+          participants
         };
       });
       
@@ -332,17 +353,26 @@ const app = new Elysia()
 const server = app.listen(3000);
 
 // Initialize WebSocket server after the HTTP server is running
-const wsManager = new WebSocketManager(server);
+console.log('🔌 Attempting to initialize WebSocket server...');
+let wsManager: any;
+try {
+  wsManager = new WebSocketManager(server);
+  console.log('🔌 WebSocket server initialized successfully');
+} catch (error) {
+  console.error('❌ Failed to initialize WebSocket server:', error);
+}
 
 console.log(
-  `🦊 ParentConnect server is running at ${server.hostname}:${server.port}`
+  `🦊 ParentConnect server is running on port 3000`
 );
 console.log('🔌 WebSocket server initialized');
 
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('\n🛑 Shutting down server...');
-  wsManager.stop();
+  if (wsManager) {
+    wsManager.stop();
+  }
   db.close();
   process.exit(0);
 });

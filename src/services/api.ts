@@ -7,6 +7,7 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
+  avatar?: string;
   isVerified: boolean;
   children?: Child[];
 }
@@ -38,6 +39,7 @@ export interface Chat {
   name: string;
   type: 'class' | 'direct' | 'group';
   classId?: string;
+  participants?: string[];
   unreadCount?: number;
   lastMessage?: Message;
 }
@@ -148,6 +150,7 @@ class ApiService {
       name: response.user.name,
       email: response.user.email,
       phone: response.user.phone,
+      avatar: response.user.avatar,
       isVerified: response.user.isVerified || true, // Default to true if not provided
       children: response.user.children || []
     };
@@ -171,6 +174,7 @@ class ApiService {
       name: response.user.name,
       email: response.user.email,
       phone: response.user.phone,
+      avatar: response.user.avatar,
       isVerified: response.user.isVerified || false, // Default to false for new registrations
       children: response.user.children || []
     };
@@ -185,6 +189,10 @@ class ApiService {
   // User profile
   async getCurrentUser(): Promise<User> {
     return this.request<User>('/users/me');
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return this.request<User[]>('/users');
   }
 
   // User presence
@@ -216,6 +224,7 @@ class ApiService {
       name: chat.name,
       type: chat.type,
       classId: chat.class_id,
+      participants: chat.participants,
       unreadCount: chat.unreadCount || 0,
       lastMessage: chat.lastMessage ? {
         id: chat.lastMessage.id,

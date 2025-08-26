@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { apiService, type User, type Child } from './services/api';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { apiService, type User } from './services/api';
 import { RealtimeChatLayout } from './components/RealtimeChatLayout';
+import ParentConnectIcon from './components/ParentConnectIcon';
 
 // Enhanced mock data with proper credentials for demo
 const mockUsers = [
@@ -13,6 +14,8 @@ const mockUsers = [
     password: 'password123',
     pin: '1234',
     isVerified: true,
+    avatar: 'https://i.pravatar.cc/150?img=1',
+    createdAt: new Date('2024-01-15'),
     children: [{
       id: 'emma-johnson',
       name: 'Emma Johnson',
@@ -29,6 +32,8 @@ const mockUsers = [
     password: 'password123',
     pin: '5678',
     isVerified: true,
+    avatar: 'https://i.pravatar.cc/150?img=2',
+    createdAt: new Date('2024-01-16'),
     children: [{
       id: 'alex-chen',
       name: 'Alex Chen',
@@ -45,6 +50,8 @@ const mockUsers = [
     password: 'password123',
     pin: '9012',
     isVerified: true,
+    avatar: 'https://i.pravatar.cc/150?img=3',
+    createdAt: new Date('2024-01-17'),
     children: [{
       id: 'sophia-rodriguez',
       name: 'Sophia Rodriguez',
@@ -61,6 +68,8 @@ const mockUsers = [
     password: 'password123',
     pin: '3456',
     isVerified: true,
+    avatar: 'https://i.pravatar.cc/150?img=4',
+    createdAt: new Date('2024-01-18'),
     children: [{
       id: 'james-thompson',
       name: 'James Thompson',
@@ -77,6 +86,8 @@ const mockUsers = [
     password: 'password123',
     pin: '7890',
     isVerified: true,
+    avatar: 'https://i.pravatar.cc/150?img=5',
+    createdAt: new Date('2024-01-19'),
     children: [{
       id: 'mia-wang',
       name: 'Mia Wang',
@@ -161,17 +172,11 @@ function LoginPage({ onLogin }: { onLogin: (user: User) => void }) {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ 
-            background: '#667eea', 
-            width: '60px', 
-            height: '60px', 
-            borderRadius: '50%', 
             display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            margin: '0 auto 1rem',
-            fontSize: '24px'
+            justifyContent: 'center', 
+            marginBottom: '1rem' 
           }}>
-            💬
+            <ParentConnectIcon size="xl" />
           </div>
           <h1 style={{ color: '#333', marginBottom: '0.5rem', fontSize: '2rem' }}>
             ParentConnect

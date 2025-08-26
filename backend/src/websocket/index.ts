@@ -89,13 +89,21 @@ class WebSocketManager {
   private heartbeatInterval: NodeJS.Timeout | null = null;
 
   constructor(server: any) {
-    this.wss = new WebSocketServer({ server });
+    console.log('🔌 Creating WebSocket server on port 3001...');
+    // Create WebSocket server on a separate port for now
+    this.wss = new WebSocketServer({ port: 3001 });
+    console.log('🔌 WebSocket server created, setting up event handlers...');
     this.setupWebSocketServer();
+    console.log('🔌 Starting heartbeat...');
     this.startHeartbeat();
+    console.log('🔌 WebSocket server setup complete');
   }
 
   private setupWebSocketServer() {
+    console.log('🔌 Setting up WebSocket server event handlers...');
+    
     this.wss.on('connection', (ws, request) => {
+      console.log('🔌 WebSocket connection event triggered!');
       const connectionId = uuidv4();
       const connection: Connection = {
         id: connectionId,
@@ -111,7 +119,9 @@ class WebSocketManager {
 
       ws.on('message', (data) => {
         try {
+          console.log(`📨 Raw message received from ${connectionId}:`, data.toString());
           const message: WebSocketMessage = JSON.parse(data.toString());
+          console.log(`📨 Parsed message from ${connectionId}:`, message.type, message.data);
           this.handleMessage(connectionId, message);
         } catch (error) {
           console.error('❌ Error parsing WebSocket message:', error);
@@ -120,6 +130,7 @@ class WebSocketManager {
       });
 
       ws.on('close', () => {
+        console.log(`🔌 WebSocket connection closed: ${connectionId}`);
         this.handleDisconnection(connectionId);
       });
 
@@ -136,31 +147,42 @@ class WebSocketManager {
         data: { status: 'connected', connectionId }
       });
     });
+    
+    console.log('🔌 WebSocket server event handlers set up complete');
   }
 
   private async handleMessage(connectionId: string, message: WebSocketMessage) {
     const connection = this.connections.get(connectionId);
-    if (!connection) return;
+    if (!connection) {
+      console.log(`❌ No connection found for ${connectionId}`);
+      return;
+    }
 
-    console.log(`📨 Received message from ${connectionId}:`, message.type);
+    console.log(`📨 Processing message from ${connectionId}:`, message.type);
 
     switch (message.type) {
       case 'auth':
+        console.log(`🔐 Processing auth message from ${connectionId}`);
         await this.handleAuth(connectionId, message as AuthMessage);
         break;
       case 'message':
+        console.log(`💬 Processing chat message from ${connectionId}`);
         await this.handleChatMessage(connectionId, message as ChatMessage);
         break;
       case 'typing':
+        console.log(`⌨️ Processing typing indicator from ${connectionId}`);
         await this.handleTypingIndicator(connectionId, message as TypingIndicator);
         break;
       case 'receipt':
+        console.log(`📋 Processing message receipt from ${connectionId}`);
         await this.handleMessageReceipt(connectionId, message as MessageReceipt);
         break;
       case 'heartbeat':
+        console.log(`💓 Processing heartbeat from ${connectionId}`);
         this.handleHeartbeat(connectionId);
         break;
       default:
+        console.log(`❓ Unknown message type from ${connectionId}:`, message.type);
         this.sendError(connectionId, `Unknown message type: ${message.type}`);
     }
   }
@@ -205,6 +227,19 @@ class WebSocketManager {
         timestamp: Date.now(),
         data: { status: 'authenticated', user: { id: user.id, name: user.name } }
       });
+
+      // Send current online users to the newly authenticated user
+      const onlineUsers = db.getOnlineUsers();
+      for (const onlineUser of onlineUsers) {
+        if (onlineUser.user_id !== user.id) {
+          this.sendMessage(connectionId, {
+            id: uuidv4(),
+            type: 'presence',
+            timestamp: Date.now(),
+            data: { userId: onlineUser.user_id, status: 'online' }
+          });
+        }
+      }
 
     } catch (error) {
       console.error('❌ Authentication error:', error);
@@ -274,12 +309,14 @@ class WebSocketManager {
 
   private async handleMessageReceipt(connectionId: string, message: MessageReceipt) {
     const connection = this.connections.get(connectionId);
-    if (!connection || !connection.isAuthenticated) return;
+    if (!connection || !connection.isAuthenticated) {
+      return;
+    }
 
     try {
       // Update message status in database
-      await this.updateMessageStatus(message.data.messageId, 
-        message.data.receiptType === 'read' ? MessageStatus.READ : MessageStatus.DELIVERED);
+      const status = message.data.receiptType === 'read' ? MessageStatus.READ : MessageStatus.DELIVERED;
+      await this.updateMessageStatus(message.data.messageId, status);
 
       // Broadcast receipt to message sender
       const originalMessage = db.getMessageById(message.data.messageId);
@@ -293,7 +330,7 @@ class WebSocketManager {
       }
 
     } catch (error) {
-      console.error('❌ Error handling message receipt:', error);
+      console.error('Error handling message receipt:', error);
     }
   }
 
@@ -370,21 +407,19 @@ class WebSocketManager {
 
   private async updateUserPresence(userId: string, status: 'online' | 'away' | 'offline') {
     try {
-      // Update in database (you'll need to add this to your database schema)
-      // For now, we'll just log it
-      console.log(`👤 User ${userId} presence updated to: ${status}`);
+      // Update user presence in database
+      db.updateUserPresence(userId, status);
     } catch (error) {
-      console.error('❌ Error updating user presence:', error);
+      console.error('Error updating user presence:', error);
     }
   }
 
   private async updateMessageStatus(messageId: string, status: MessageStatus) {
     try {
-      // Update in database (you'll need to add this to your database schema)
-      // For now, we'll just log it
-      console.log(`📊 Message ${messageId} status updated to: ${status}`);
+      // Update message status in database
+      db.updateMessageStatus(messageId, status);
     } catch (error) {
-      console.error('❌ Error updating message status:', error);
+      console.error('Error updating message status:', error);
     }
   }
 

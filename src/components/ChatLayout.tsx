@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import ChatSidebar from './ChatSidebar';
 import ChatWindow from './ChatWindow';
-import { User } from '../types';
+import type { User } from '../types';
 
 interface ChatLayoutProps {
   currentUser: User;

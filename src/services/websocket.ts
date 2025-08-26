@@ -8,7 +8,8 @@ export interface WebSocketMessage {
   data: any;
 }
 
-export interface ChatMessage {
+// Message types
+export interface ChatMessage extends WebSocketMessage {
   type: 'message';
   data: {
     id: string;
@@ -22,7 +23,7 @@ export interface ChatMessage {
   };
 }
 
-export interface TypingIndicator {
+export interface TypingIndicator extends WebSocketMessage {
   type: 'typing';
   data: {
     chatId: string;
@@ -31,7 +32,7 @@ export interface TypingIndicator {
   };
 }
 
-export interface PresenceUpdate {
+export interface PresenceUpdate extends WebSocketMessage {
   type: 'presence';
   data: {
     userId: string;
@@ -40,7 +41,7 @@ export interface PresenceUpdate {
   };
 }
 
-export interface MessageReceipt {
+export interface MessageReceipt extends WebSocketMessage {
   type: 'receipt';
   data: {
     messageId: string;
@@ -49,20 +50,22 @@ export interface MessageReceipt {
   };
 }
 
-export interface AuthMessage {
+export interface AuthMessage extends WebSocketMessage {
   type: 'auth';
   data: {
     token: string;
   };
 }
 
-export enum MessageStatus {
-  SENDING = 'sending',
-  SENT = 'sent',
-  DELIVERED = 'delivered',
-  READ = 'read',
-  FAILED = 'failed'
-}
+export const MessageStatus = {
+  SENDING: 'sending',
+  SENT: 'sent',
+  DELIVERED: 'delivered',
+  READ: 'read',
+  FAILED: 'failed'
+} as const;
+
+export type MessageStatus = typeof MessageStatus[keyof typeof MessageStatus];
 
 export interface QueuedMessage {
   id: string;
@@ -108,8 +111,8 @@ class ParentConnectWebSocket {
     this.authToken = token;
 
     try {
-      // Connect to WebSocket server
-      this.ws = new WebSocket(`ws://localhost:3000`);
+      // Connect to WebSocket server on port 3001
+      this.ws = new WebSocket(`ws://localhost:3001`);
 
       this.ws.onopen = () => {
         console.log('🔌 WebSocket connected');
@@ -125,7 +128,9 @@ class ParentConnectWebSocket {
         this.startHeartbeat();
         
         // Notify connection change
-        this.onConnectionChange?.(true);
+        if (this.onConnectionChange) {
+          this.onConnectionChange(true);
+        }
         
         // Process queued messages
         this.processMessageQueue();
@@ -134,10 +139,13 @@ class ParentConnectWebSocket {
       this.ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
+          console.log('📨 Received WebSocket message:', message.type, message.data);
           this.handleMessage(message);
         } catch (error) {
           console.error('❌ Error parsing WebSocket message:', error);
-          this.onError?.('Failed to parse message');
+          if (this.onError) {
+            this.onError('Failed to parse message');
+          }
         }
       };
 
@@ -148,7 +156,9 @@ class ParentConnectWebSocket {
         this.stopHeartbeat();
         
         // Notify connection change
-        this.onConnectionChange?.(false);
+        if (this.onConnectionChange) {
+          this.onConnectionChange(false);
+        }
         
         // Attempt reconnection if not a clean close
         if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -159,13 +169,17 @@ class ParentConnectWebSocket {
       this.ws.onerror = (error) => {
         console.error('❌ WebSocket error:', error);
         this.isConnecting = false;
-        this.onError?.('WebSocket connection error');
+        if (this.onError) {
+        this.onError('WebSocket connection error');
+      }
       };
 
     } catch (error) {
       console.error('❌ Error connecting to WebSocket:', error);
       this.isConnecting = false;
-      this.onError?.('Failed to connect to WebSocket');
+      if (this.onError) {
+        this.onError('Failed to connect to WebSocket');
+      }
       throw error;
     }
   }
@@ -189,6 +203,7 @@ class ParentConnectWebSocket {
   public sendMessage(chatId: string, content: string, messageType: 'text' | 'image' | 'file' | 'voice' = 'text', attachments?: any[], replyTo?: string): Promise<string> {
     return new Promise((resolve, reject) => {
       if (!this.isAuthenticated) {
+        console.log('⚠️ Not authenticated, queuing message');
         // Queue message for later
         const queuedMessage: QueuedMessage = {
           id: uuidv4(),
@@ -208,7 +223,9 @@ class ParentConnectWebSocket {
 
       const messageId = uuidv4();
       const message: ChatMessage = {
+        id: messageId,
         type: 'message',
+        timestamp: Date.now(),
         data: {
           id: messageId,
           chatId,
@@ -222,6 +239,7 @@ class ParentConnectWebSocket {
       };
 
       try {
+        console.log('📤 Sending message:', message);
         this.send(message);
         resolve(messageId);
       } catch (error) {
@@ -235,7 +253,9 @@ class ParentConnectWebSocket {
     if (!this.isAuthenticated) return;
 
     const message: TypingIndicator = {
+      id: uuidv4(),
       type: 'typing',
+      timestamp: Date.now(),
       data: {
         chatId,
         userId: '', // Will be set by server
@@ -247,10 +267,14 @@ class ParentConnectWebSocket {
   }
 
   public markMessageAsRead(messageId: string): void {
-    if (!this.isAuthenticated) return;
+    if (!this.isAuthenticated) {
+      return;
+    }
 
     const message: MessageReceipt = {
+      id: uuidv4(),
       type: 'receipt',
+      timestamp: Date.now(),
       data: {
         messageId,
         receiptType: 'read',
@@ -265,7 +289,9 @@ class ParentConnectWebSocket {
     if (!this.isAuthenticated) return;
 
     const message: MessageReceipt = {
+      id: uuidv4(),
       type: 'receipt',
+      timestamp: Date.now(),
       data: {
         messageId,
         receiptType: 'delivered',
@@ -281,15 +307,18 @@ class ParentConnectWebSocket {
   }
 
   private authenticate(token: string): void {
+    console.log('🔐 Sending authentication message');
     const message: AuthMessage = {
+      id: uuidv4(),
       type: 'auth',
+      timestamp: Date.now(),
       data: { token }
     };
     this.send(message);
   }
 
   private handleMessage(message: WebSocketMessage): void {
-    console.log('📨 Received WebSocket message:', message.type);
+    console.log('📨 Processing WebSocket message:', message.type);
 
     switch (message.type) {
       case 'auth':
@@ -309,7 +338,9 @@ class ParentConnectWebSocket {
         break;
       case 'error':
         console.error('❌ WebSocket error:', message.data.error);
-        this.onError?.(message.data.error);
+        if (this.onError) {
+          this.onError(message.data.error);
+        }
         break;
       default:
         console.warn('⚠️ Unknown message type:', message.type);
@@ -317,46 +348,71 @@ class ParentConnectWebSocket {
   }
 
   private handleAuthMessage(message: WebSocketMessage): void {
+    console.log('🔐 Auth message received:', message.data);
+    
     if (message.data.status === 'authenticated') {
       console.log('✅ WebSocket authenticated');
       this.isAuthenticated = true;
+      
+      // Process any queued messages now that we're authenticated
+      this.processMessageQueue();
     } else if (message.data.status === 'connected') {
       console.log('🔌 WebSocket connection established');
+    } else if (message.data.error) {
+      console.error('❌ Authentication failed:', message.data.error);
+      if (this.onError) {
+        this.onError(message.data.error);
+      }
+      this.isAuthenticated = false;
     }
   }
 
   private handleChatMessage(message: ChatMessage): void {
+    console.log('💬 Chat message received:', message.data);
+    
     // Mark message as delivered
     this.markMessageAsDelivered(message.data.id);
     
     // Notify message handler
-    this.onMessage?.(message);
+    if (this.onMessage) {
+      this.onMessage(message);
+    }
   }
 
   private handleTypingMessage(message: TypingIndicator): void {
-    this.onTypingIndicator?.(
-      message.data.chatId,
-      message.data.userId,
-      message.data.isTyping
-    );
+    console.log('⌨️ Typing indicator received:', message.data);
+    if (this.onTypingIndicator) {
+      this.onTypingIndicator(
+        message.data.chatId,
+        message.data.userId,
+        message.data.isTyping
+      );
+    }
   }
 
   private handlePresenceMessage(message: PresenceUpdate): void {
-    this.onUserPresence?.(
-      message.data.userId,
-      message.data.status === 'online'
-    );
+    console.log('👤 Presence update received:', message.data);
+    if (this.onUserPresence) {
+      this.onUserPresence(
+        message.data.userId,
+        message.data.status === 'online'
+      );
+    }
   }
 
   private handleReceiptMessage(message: MessageReceipt): void {
     const status = message.data.receiptType === 'read' ? MessageStatus.READ : MessageStatus.DELIVERED;
-    this.onStatusUpdate?.(message.data.messageId, status);
+    if (this.onStatusUpdate) {
+      this.onStatusUpdate(message.data.messageId, status);
+    }
   }
 
   private send(message: WebSocketMessage): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
+      console.log('📤 Sending WebSocket message:', message.type);
       this.ws.send(JSON.stringify(message));
     } else {
+      console.error('❌ WebSocket is not connected');
       throw new Error('WebSocket is not connected');
     }
   }
