@@ -34,7 +34,7 @@ The easiest way to start the entire application (frontend + backend) is using th
 
 ```bash
 # From the project root directory
-./parent-connect.sh start
+./scripts/parent-connect.sh start
 ```
 
 This will automatically:

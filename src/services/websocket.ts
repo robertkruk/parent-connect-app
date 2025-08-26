@@ -111,8 +111,8 @@ class ParentConnectWebSocket {
     this.authToken = token;
 
     try {
-      // Connect to WebSocket server on port 3001
-      this.ws = new WebSocket(`ws://localhost:3001`);
+          // Connect to WebSocket server on port 4002
+    this.ws = new WebSocket(`ws://localhost:4002`);
 
       this.ws.onopen = () => {
         console.log('🔌 WebSocket connected');

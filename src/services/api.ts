@@ -1,6 +1,6 @@
 // API service for communicating with the backend
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://localhost:4001/api';
 
 export interface User {
   id: string;

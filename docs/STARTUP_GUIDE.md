@@ -2,7 +2,7 @@
 
 ## 🚀 Quick Start
 
-**The `parent-connect.sh` script is the recommended way to manage your Parent Connect App.** It handles both frontend and backend services automatically, eliminating the need to run `npm run dev` or `bun run dev` commands manually.
+**The `scripts/parent-connect.sh` script is the recommended way to manage your Parent Connect App.** It handles both frontend and backend services automatically, eliminating the need to run `npm run dev` or `bun run dev` commands manually.
 
 ### ⚠️ Important: Use the Startup Script
 
@@ -11,7 +11,7 @@ Instead of running individual commands like:
 - ❌ `bun run dev` (backend)
 
 Use the unified startup script:
-- ✅ `./parent-connect.sh start` (starts both services)
+- ✅ `./scripts/parent-connect.sh start` (starts both services)
 
 ### Prerequisites
 
@@ -22,25 +22,25 @@ Use the unified startup script:
 
 ```bash
 # Start the entire application (frontend + backend)
-./parent-connect.sh start
+./scripts/parent-connect.sh start
 
 # Stop the application
-./parent-connect.sh stop
+./scripts/parent-connect.sh stop
 
 # Gracefully shutdown the application
-./parent-connect.sh shutdown
+./scripts/parent-connect.sh shutdown
 
 # Restart the application
-./parent-connect.sh restart
+./scripts/parent-connect.sh restart
 
 # Check current status
-./parent-connect.sh status
+./scripts/parent-connect.sh status
 
 # Clean up PID files (if processes are stuck)
-./parent-connect.sh cleanup
+./scripts/parent-connect.sh cleanup
 
 # Force kill processes on app ports (emergency cleanup)
-./parent-connect.sh force-kill
+./scripts/parent-connect.sh force-kill
 ```
 
 ### What the Script Does
@@ -65,20 +65,20 @@ Use the unified startup script:
 **If services won't start:**
 ```bash
 # Clean up and try again
-./parent-connect.sh cleanup
-./parent-connect.sh start
+./scripts/parent-connect.sh cleanup
+./scripts/parent-connect.sh start
 ```
 
 **If ports are in use:**
 ```bash
 # Check what's using the ports
-./parent-connect.sh status
+./scripts/parent-connect.sh status
 
 # Force kill processes on app ports
-./parent-connect.sh force-kill
+./scripts/parent-connect.sh force-kill
 
 # Then start again
-./parent-connect.sh start
+./scripts/parent-connect.sh start
 ```
 
 **If you see "Bun is not installed":**
@@ -123,11 +123,11 @@ bun run dev
 
 ### Development Workflow
 
-1. **Start development**: `./parent-connect.sh start`
+1. **Start development**: `./scripts/parent-connect.sh start`
 2. **Make changes** to your code
-3. **Check status**: `./parent-connect.sh status`
-4. **Restart if needed**: `./parent-connect.sh restart`
-5. **Stop when done**: `./parent-connect.sh stop`
+3. **Check status**: `./scripts/parent-connect.sh status`
+4. **Restart if needed**: `./scripts/parent-connect.sh restart`
+5. **Stop when done**: `./scripts/parent-connect.sh stop`
 
 ### Key Benefits of Using the Startup Script
 

@@ -6,7 +6,7 @@ echo ""
 
 # Check if app is running
 echo "📡 Checking application status..."
-./parent-connect.sh status
+./scripts/parent-connect.sh status
 
 echo ""
 echo "🧪 Testing Demo Features..."
