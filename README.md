@@ -37,6 +37,19 @@ ParentConnect provides a solution by creating a dedicated, safe space for parent
 - **Clean UI**: Modern, intuitive design with Tailwind CSS
 - **Accessibility**: Screen reader friendly and keyboard navigable
 
+## 🎬 Demo
+
+See ParentConnect in action! This demo shows the complete user experience from login to real-time messaging:
+
+![ParentConnect Demo](demo.gif)
+
+*The demo showcases:*
+- User authentication with email login
+- Class-based chat organization
+- Real-time messaging between parents
+- Child-linked parent identification
+- Modern, responsive interface
+
 ## 🚀 Getting Started
 
 ### Prerequisites
