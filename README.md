@@ -37,6 +37,12 @@ ParentConnect provides a solution by creating a dedicated, safe space for parent
 - **Clean UI**: Modern, intuitive design with Tailwind CSS
 - **Accessibility**: Screen reader friendly and keyboard navigable
 
+## 🎬 Demo
+
+![ParentConnect Demo](demo/demo.gif)
+
+*Watch the demo to see ParentConnect in action - a safe, organized communication platform for parents.*
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -167,6 +173,14 @@ parent-connect-app/
 │   │   └── index.ts       # Main Elysia server
 │   ├── package.json       # Backend dependencies
 │   └── setup.sh           # Backend setup script
+├── demo/                  # Demo and presentation files
+│   ├── demo.gif          # Application demo animation
+│   ├── demo-slides.html  # Presentation slides
+│   ├── debug-login.html  # Login debugging tool
+│   └── README.md         # Demo documentation
+├── docs/                  # Project documentation
+├── scripts/               # Utility scripts
+├── tests/                 # Test files
 └── README.md              # Project documentation
 ```
 
