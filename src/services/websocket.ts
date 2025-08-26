@@ -200,7 +200,7 @@ class ParentConnectWebSocket {
     }
   }
 
-  public sendMessage(chatId: string, content: string, messageType: 'text' | 'image' | 'file' | 'voice' = 'text', attachments?: any[], replyTo?: string): Promise<string> {
+  public sendMessage(chatId: string, content: string, messageType: 'text' | 'image' | 'file' | 'voice' = 'text', attachments?: any[], replyTo?: string, currentUserId?: string): Promise<string> {
     return new Promise((resolve, reject) => {
       if (!this.isAuthenticated) {
         console.log('⚠️ Not authenticated, queuing message');
@@ -230,7 +230,7 @@ class ParentConnectWebSocket {
           id: messageId,
           chatId,
           content,
-          senderId: '', // Will be set by server
+          senderId: currentUserId || '', // Use provided current user ID
           messageType,
           attachments,
           replyTo,
@@ -249,7 +249,7 @@ class ParentConnectWebSocket {
     });
   }
 
-  public sendTypingIndicator(chatId: string, isTyping: boolean): void {
+  public sendTypingIndicator(chatId: string, isTyping: boolean, currentUserId?: string): void {
     if (!this.isAuthenticated) return;
 
     const message: TypingIndicator = {
@@ -258,7 +258,7 @@ class ParentConnectWebSocket {
       timestamp: Date.now(),
       data: {
         chatId,
-        userId: '', // Will be set by server
+        userId: currentUserId || '', // Use provided current user ID
         isTyping
       }
     };

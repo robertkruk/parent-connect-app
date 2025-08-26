@@ -19,6 +19,8 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+
+
   const getChatDisplayName = (chat: any) => {
     if (chat.type === 'class') {
       return chat.name;
@@ -106,6 +108,7 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
               userAvatars[user.id] = user.avatar;
             }
           });
+
           setUsers(userNames);
           // Store avatars in a ref or state for use in message rendering
           (window as any).userAvatars = userAvatars;
@@ -119,6 +122,7 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
             '3b6873f7-a3b6-4773-b26d-6ba7c5d82b36': 'David Thompson',
             '162b123d-d09d-4e22-b061-19479110e5f6': 'Lisa Wang'
           };
+
           setUsers(userNames);
         }
       } catch (error) {
@@ -144,11 +148,11 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
     }
 
     if (isTyping && selectedChat) {
-      sendTypingIndicator(selectedChat.id, true);
+      sendTypingIndicator(selectedChat.id, true, currentUser.id);
       
       typingTimeoutRef.current = setTimeout(() => {
         setIsTyping(false);
-        sendTypingIndicator(selectedChat.id, false);
+        sendTypingIndicator(selectedChat.id, false, currentUser.id);
       }, 2000);
     }
 
@@ -162,11 +166,11 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
   const handleSendMessage = async () => {
     if (message.trim() && selectedChat) {
       try {
-        await sendMessage(selectedChat.id, message.trim());
+        await sendMessage(selectedChat.id, message.trim(), 'text', undefined, undefined, currentUser.id);
         setMessage('');
         setIsTyping(false);
         if (selectedChat) {
-          sendTypingIndicator(selectedChat.id, false);
+          sendTypingIndicator(selectedChat.id, false, currentUser.id);
         }
       } catch (error) {
         console.error('Failed to send message:', error);
@@ -359,6 +363,8 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
           {currentChatMessages.map((msg) => {
             const isOwnMessage = msg.senderId === currentUser.id;
             
+
+            
             return (
               <div key={msg.id} className="mb-4">
                 <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
@@ -372,7 +378,7 @@ export function RealtimeChatLayout({ currentUser, onLogout }: RealtimeChatLayout
                           className="bg-gray-200"
                         />
                         <span className="text-xs font-medium text-gray-700">
-                          {msg.senderId === currentUser.id ? currentUser.name : (users[msg.senderId] || `User ${msg.senderId}`)}
+                          {msg.senderId === currentUser.id ? currentUser.name : (users[msg.senderId] || (msg.senderId ? `User ${msg.senderId}` : 'Unknown User'))}
                         </span>
                       </div>
                     )}
