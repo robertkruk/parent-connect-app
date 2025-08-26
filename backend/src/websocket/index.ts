@@ -89,9 +89,9 @@ class WebSocketManager {
   private heartbeatInterval: NodeJS.Timeout | null = null;
 
   constructor(server: any) {
-    console.log('🔌 Creating WebSocket server on port 3001...');
+    console.log('🔌 Creating WebSocket server on port 4002...');
     // Create WebSocket server on a separate port for now
-    this.wss = new WebSocketServer({ port: 3001 });
+    this.wss = new WebSocketServer({ port: 4002 });
     console.log('🔌 WebSocket server created, setting up event handlers...');
     this.setupWebSocketServer();
     console.log('🔌 Starting heartbeat...');

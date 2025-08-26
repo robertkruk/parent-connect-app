@@ -39,16 +39,9 @@ ParentConnect provides a solution by creating a dedicated, safe space for parent
 
 ## 🎬 Demo
 
-See ParentConnect in action! This demo shows the complete user experience from login to real-time messaging:
+![ParentConnect Demo](demo/demo.gif)
 
-![ParentConnect Demo](demo.gif)
-
-*The demo showcases:*
-- User authentication with email login
-- Class-based chat organization
-- Real-time messaging between parents
-- Child-linked parent identification
-- Modern, responsive interface
+*Watch the demo to see ParentConnect in action - a safe, organized communication platform for parents.*
 
 ## 🚀 Getting Started
 
@@ -180,6 +173,14 @@ parent-connect-app/
 │   │   └── index.ts       # Main Elysia server
 │   ├── package.json       # Backend dependencies
 │   └── setup.sh           # Backend setup script
+├── demo/                  # Demo and presentation files
+│   ├── demo.gif          # Application demo animation
+│   ├── demo-slides.html  # Presentation slides
+│   ├── debug-login.html  # Login debugging tool
+│   └── README.md         # Demo documentation
+├── docs/                  # Project documentation
+├── scripts/               # Utility scripts
+├── tests/                 # Test files
 └── README.md              # Project documentation
 ```
 

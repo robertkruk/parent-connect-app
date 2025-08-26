@@ -34,7 +34,7 @@ echo ""
 
 
 echo "To start the entire application (recommended):"
-echo "  cd .. && ./parent-connect.sh start"
+echo "  cd .. && ./scripts/parent-connect.sh start"
 echo ""
 echo "To start only the backend manually:"
 echo "  bun run dev"

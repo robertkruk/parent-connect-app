@@ -17,7 +17,7 @@ const app = new Elysia()
   .onRequest(({ request, set }) => {
     // Add CORS headers
     const origin = request.headers.get('origin');
-    if (origin && (origin.includes('localhost:5173') || origin.includes('localhost:5174') || origin.includes('localhost:3000'))) {
+    if (origin && (origin.includes('localhost:4000') || origin.includes('localhost:5173') || origin.includes('localhost:5174') || origin.includes('localhost:3000'))) {
       set.headers['Access-Control-Allow-Origin'] = origin;
     } else {
       set.headers['Access-Control-Allow-Origin'] = '*';
@@ -350,7 +350,7 @@ const app = new Elysia()
   }));
 
 // Start the server and get the server instance
-const server = app.listen(3000);
+const server = app.listen(4001);
 
 // Initialize WebSocket server after the HTTP server is running
 console.log('🔌 Attempting to initialize WebSocket server...');
@@ -363,7 +363,7 @@ try {
 }
 
 console.log(
-  `🦊 ParentConnect server is running on port 3000`
+  `🦊 ParentConnect server is running on port 4001`
 );
 console.log('🔌 WebSocket server initialized');
 

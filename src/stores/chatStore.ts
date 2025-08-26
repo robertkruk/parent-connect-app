@@ -269,13 +269,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
-  sendMessage: async (chatId: string, content: string, type: 'text' | 'image' | 'file' | 'voice' = 'text', attachments?: string[], replyTo?: string) => {
+  sendMessage: async (chatId: string, content: string, type: 'text' | 'image' | 'file' | 'voice' = 'text', attachments?: string[], replyTo?: string, currentUserId?: string) => {
     try {
       // Create optimistic message
       const optimisticMessage: Message = {
         id: `temp-${Date.now()}`,
         content,
-        senderId: '', // Will be set by server
+        senderId: currentUserId || '', // Use provided current user ID for optimistic update
         chatId,
         type,
         attachments,
@@ -289,7 +289,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       get().addMessage(chatId, optimisticMessage);
 
       // Send via WebSocket
-      const messageId = await websocketService.sendMessage(chatId, content, type, attachments, replyTo);
+      const messageId = await websocketService.sendMessage(chatId, content, type, attachments, replyTo, currentUserId);
       
       // Update message status to sent
       get().updateMessageStatus(optimisticMessage.id, MessageStatus.SENT);
@@ -303,7 +303,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  sendTypingIndicator: (chatId: string, isTyping: boolean) => {
-    websocketService.sendTypingIndicator(chatId, isTyping);
+  sendTypingIndicator: (chatId: string, isTyping: boolean, currentUserId?: string) => {
+    websocketService.sendTypingIndicator(chatId, isTyping, currentUserId);
   }
 }));

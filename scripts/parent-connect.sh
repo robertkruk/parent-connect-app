@@ -4,11 +4,15 @@
 # Usage: ./startup.sh [start|stop|restart|status]
 
 APP_NAME="Parent Connect App"
-FRONTEND_PORT=5173
-BACKEND_PORT=3000
+FRONTEND_PORT=4000
+BACKEND_PORT=4001
 FRONTEND_PID_FILE=".frontend.pid"
 BACKEND_PID_FILE=".backend.pid"
 LOG_FILE="app.log"
+
+# Get the project root directory (where this script is located)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Colors for output
 RED='\033[0;31m'
@@ -55,6 +59,19 @@ is_port_in_use() {
         return 0
     fi
     return 1
+}
+
+# Function to navigate to project root
+navigate_to_project_root() {
+    cd "$PROJECT_ROOT"
+    
+    # Verify we're in the correct directory
+    if [ ! -f "package.json" ]; then
+        print_error "Could not find package.json in project root: $PROJECT_ROOT"
+        return 1
+    fi
+    
+    return 0
 }
 
 # Function to find next available port
@@ -147,12 +164,23 @@ start_frontend() {
         return 0
     fi
     
-    cd "$(dirname "$0")"
+    # Verify we're in the correct directory (project root, not backend)
+    if [ ! -f "package.json" ]; then
+        print_error "Could not find package.json in current directory: $(pwd)"
+        return 1
+    fi
     
     # Check if node_modules exists, if not install dependencies
     if [ ! -d "node_modules" ]; then
         print_status "Installing frontend dependencies..."
         npm install
+    fi
+    
+    # Verify this is the frontend package.json (should have vite dependency)
+    if ! grep -q "vite" package.json; then
+        print_error "This doesn't appear to be the frontend package.json (no vite dependency found)"
+        print_error "Current directory: $(pwd)"
+        return 1
     fi
     
     # Check port availability
@@ -229,7 +257,24 @@ start_backend() {
         return 0
     fi
     
-    cd "$(dirname "$0")/backend"
+    # Navigate to backend directory
+    # Get the script's absolute path regardless of current working directory
+    SCRIPT_PATH="$0"
+    if [[ "$SCRIPT_PATH" != /* ]]; then
+        SCRIPT_PATH="$(pwd)/$SCRIPT_PATH"
+    fi
+    SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+    BACKEND_DIR="$PROJECT_ROOT/backend"
+    
+    # Verify backend directory exists
+    if [ ! -d "$BACKEND_DIR" ]; then
+        print_error "Could not find backend directory: $BACKEND_DIR"
+        return 1
+    fi
+    
+    cd "$BACKEND_DIR"
+    print_status "Backend working directory: $(pwd)"
     
     # Check if bun is installed
     if ! command -v bun &> /dev/null; then
@@ -257,13 +302,13 @@ start_backend() {
     # Start backend in background with separate log file using nohup for better process management
     nohup bun run dev > "../backend.log" 2>&1 &
     local backend_pid=$!
-    echo $backend_pid > "../$BACKEND_PID_FILE"
+    echo $backend_pid > "$PROJECT_ROOT/$BACKEND_PID_FILE"
     
     # Wait a moment for the process to start and then get the actual Bun process PID
     sleep 2
     local bun_pid=$(pgrep -f "bun.*dev" | head -1)
     if [ -n "$bun_pid" ]; then
-        echo $bun_pid > "../$BACKEND_PID_FILE"
+        echo $bun_pid > "$PROJECT_ROOT/$BACKEND_PID_FILE"
         backend_pid=$bun_pid
     fi
     
@@ -423,6 +468,14 @@ start_all() {
     if start_backend; then
         # Wait a moment for backend to fully initialize
         sleep 2
+        
+        # Reset working directory to project root for frontend
+        if ! navigate_to_project_root; then
+            print_error "Failed to navigate to project root"
+            stop_backend
+            return 1
+        fi
+        
         # Start frontend
         if start_frontend; then
             print_success "$APP_NAME started successfully!"
